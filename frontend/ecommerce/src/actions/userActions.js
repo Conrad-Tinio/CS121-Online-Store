@@ -35,14 +35,26 @@ export const register = (fname, lname, email, password) => async(dispatch) => {
             payload: data
         })
 
-        localStorage.setItem('activateMessage', "Please check your email to activate your account.")
+        if (data && data.details === "Please check your email to activate your account.") {
+            localStorage.setItem('activateMessage', data.details)
+        }
     } catch (error) {
+        console.log('Registration error:', error.response);
+        console.log('Error data:', error.response ? error.response.data : 'No response data');
+        
+        let errorMessage = 'An error occurred during registration';
+        
+        if (error.response && error.response.data) {
+            if (error.response.data.details) {
+                errorMessage = error.response.data.details;
+            } else if (error.response.data.detail) {
+                errorMessage = error.response.data.detail;
+            }
+        }
         
         dispatch({
             type: USER_REGISTER_FAIL,
-            payload: error.response && error.response.data.detail
-            ? error.response.data.detail 
-            : error.message, 
+            payload: errorMessage
         })
     }
 }
@@ -72,6 +84,10 @@ export const login = (email, password) => async(dispatch) => {
         })
 
         localStorage.setItem('userInfo', JSON.stringify(data))
+        
+        // Set lastLoginTime to 0 to indicate a fresh login
+        // This will trigger the welcome message in App.js
+        localStorage.setItem('lastLoginTime', '0')
     } catch (error) {
         
         dispatch({

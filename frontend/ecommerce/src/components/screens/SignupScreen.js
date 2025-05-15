@@ -28,34 +28,34 @@ function SignupScreen() {
   const location = useLocation();
   const redirect = location.search ? location.search.split("=")[1] : "/"
 
-  const userSignup = useSelector((state) => state.userSignup);
-  const userInfo = userSignup;
-  const error = userSignup;
+  const userSignup = useSelector((state) => state.userRegister);
+  const { loading, error, userInfo } = userSignup;
+
+  // Debug useEffect to monitor message changes
+  useEffect(() => {
+    console.log("Message state changed:", message);
+  }, [message]);
 
   useEffect(() => {
-    // Check for specific conditions instead of running this logic every time
-    
-    // Only check localStorage when the component first mounts
+    // If registration was successful, redirect to login immediately
+    if (userInfo && userInfo.details === "Please check your email to activate your account.") {
+      // Just redirect without showing the message
+      navigate("/login");
+    }
+    // Display error message if registration failed
+    else if (error) {
+      console.log("Error from userSignup:", error);
+      setMessage(error);
+    }
+  }, [userInfo, error, navigate]);
+
+  useEffect(() => {
+    // Check for activation message in localStorage
     const activateAccount = localStorage.getItem('activateMessage');
     if (activateAccount) {
       setMessage(activateAccount);
       localStorage.removeItem('activateMessage');
-      return; // Exit early if we found and used an activate message
     }
-    
-    // Only set messages from userInfo if there's actual detail content
-    if (userInfo && userInfo.details) {
-      setMessage(userInfo.details);
-      setFname("")
-      setLname("")
-      setEmail("")
-      setPassword1("")
-      setPassword2("")
-    } else if (error) {
-      setMessage(error);
-    }
-    
-    // Empty dependency array makes this run once on mount only
   }, []);
 
   const submitHandler = (e) => {
@@ -63,12 +63,13 @@ function SignupScreen() {
   
     if (password1 !== password2) {
       setMessage("Passwords do not match.")
-      navigate("/register")
+    } else if (!validEmail.test(email)) {
+      setMessage("Please enter a valid email address.")
     } else {
       dispatch(register(fname, lname, email, password1))
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000); // 3 seconds delay
+      // Only clear password fields, keep other fields
+      setPassword1("")
+      setPassword2("")
     }
   };
   const showPassword = () => {
@@ -95,6 +96,7 @@ function SignupScreen() {
               </Card.Header>
 
               <Card.Body>
+                {loading ? <Loader /> : null}
                 {message && <Message variant='danger'>{message}</Message>}
                 
                 <Form onSubmit={submitHandler}>

@@ -1,22 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Navbar, Container, Form, Button, Modal } from "react-bootstrap";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Navbar, Container, Form, Button, Modal, Row, Col } from "react-bootstrap";
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from "../actions/userActions";
 import axios from 'axios';
 
 function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
-  const [keyword, setKeyword] = useState('');
-  const [category, setCategory] = useState('');
+  
+  // Initialize state from URL parameters
+  const searchParams = new URLSearchParams(location.search);
+  const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
+  const [category, setCategory] = useState(searchParams.get('category') || '');
   const [categories, setCategories] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+  const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '');
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '');
+  const [expanded, setExpanded] = useState(false);
 
   const userLogin = useSelector(state => state.userLogin);
   const {userInfo} = userLogin;
+
+  // Update state when URL changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setKeyword(params.get('keyword') || '');
+    setCategory(params.get('category') || '');
+    setMinPrice(params.get('min_price') || '');
+    setMaxPrice(params.get('max_price') || '');
+  }, [location.search]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -28,58 +42,115 @@ function Header() {
 
   const logoutHandler = () => {
     dispatch(logout())
+    setExpanded(false);
   }
 
   const submitHandler = (e) => {
     e.preventDefault()
-    let searchParams = new URLSearchParams()
+    // Start with current parameters and override/add new ones
+    let searchParams = new URLSearchParams(location.search)
     
+    // Update or remove parameters
     if (keyword.trim()) {
-      searchParams.append('keyword', keyword)
+      searchParams.set('keyword', keyword)
+    } else {
+      searchParams.delete('keyword')
     }
-    if (category) {
-      searchParams.append('category', category)
+    
+    // Maintain category from URL if present
+    const currentCategory = searchParams.get('category')
+    if (!currentCategory && category) {
+      searchParams.set('category', category)
     }
+    
     if (minPrice) {
-      searchParams.append('min_price', minPrice)
+      searchParams.set('min_price', minPrice)
+    } else {
+      searchParams.delete('min_price')
     }
+    
     if (maxPrice) {
-      searchParams.append('max_price', maxPrice)
+      searchParams.set('max_price', maxPrice)
+    } else {
+      searchParams.delete('max_price')
     }
 
     const searchQuery = searchParams.toString()
     navigate(searchQuery ? `/?${searchQuery}` : '/')
     setShowFilter(false)
+    setExpanded(false);
   }
+
+  // Close navbar when navigating
+  const handleNavigation = () => {
+    setExpanded(false);
+  };
 
   return (
     <>
-      <Navbar className="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
-        <div className="container-fluid">
-          <NavLink to="/" className="navbar-brand">
-            Toy Kingdom
+      <Navbar 
+        bg="dark" 
+        variant="dark" 
+        expand="lg" 
+        className="py-2"
+        expanded={expanded}
+        onToggle={(expanded) => setExpanded(expanded)}
+      >
+        <Container fluid className="px-3 px-md-4">
+          <NavLink to="/" className="navbar-brand" onClick={handleNavigation}>
+            <span className="fw-bold">Toy Kingdom</span>
           </NavLink>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarColor02"
-            aria-controls="navbarColor02"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarColor02">
-            <ul className="navbar-nav me-auto">
+          
+          <Navbar.Toggle aria-controls="navbarColor02" />
+          
+          <Navbar.Collapse id="navbarColor02">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
-                <NavLink to="/" className="nav-link">
+                <NavLink to="/" className="nav-link px-3" onClick={handleNavigation}>
                   Home 
                 </NavLink>
               </li>
 
+              <li className="nav-item dropdown">
+                <a
+                  className="nav-link dropdown-toggle px-3"
+                  data-bs-toggle="dropdown"
+                  href="#"
+                  role="button"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                >
+                  Categories
+                </a>
+
+                <div className="dropdown-menu">
+                  <NavLink 
+                    to="/" 
+                    className={`dropdown-item ${!category ? 'active' : ''}`}
+                    onClick={() => {
+                      const params = new URLSearchParams(location.search);
+                      params.delete('category');
+                      navigate(`/?${params.toString()}`);
+                      handleNavigation();
+                    }}
+                  >
+                    All Products
+                  </NavLink>
+                  {categories.map(cat => (
+                    <NavLink 
+                      key={cat._id} 
+                      to={`/?category=${cat.name}`}
+                      className={`dropdown-item ${category === cat.name ? 'active' : ''}`}
+                      onClick={handleNavigation}
+                    >
+                      {cat.name}
+                    </NavLink>
+                  ))}
+                </div>
+              </li>
+
               <li className="nav-item">
-                <NavLink to="/cart" className="nav-link">
+                <NavLink to="/cart" className="nav-link px-3" onClick={handleNavigation}>
                   Cart
                 </NavLink>
               </li>
@@ -87,7 +158,7 @@ function Header() {
               {userInfo ? (
                 <li className="nav-item dropdown">
                   <a
-                    className="nav-link dropdown-toggle"
+                    className="nav-link dropdown-toggle px-3"
                     data-bs-toggle="dropdown"
                     href="#"
                     role="button"
@@ -106,7 +177,7 @@ function Header() {
               ) : (
                 <li className="nav-item dropdown">
                   <a
-                    className="nav-link dropdown-toggle"
+                    className="nav-link dropdown-toggle px-3"
                     data-bs-toggle="dropdown"
                     href="#"
                     role="button"
@@ -117,10 +188,10 @@ function Header() {
                   </a>
 
                   <div className="dropdown-menu">
-                    <NavLink to="/login" className="dropdown-item">
+                    <NavLink to="/login" className="dropdown-item" onClick={handleNavigation}>
                       Login
                     </NavLink>
-                    <NavLink to="/register" className="dropdown-item">
+                    <NavLink to="/register" className="dropdown-item" onClick={handleNavigation}>
                       Signup
                     </NavLink>
                   </div>
@@ -128,46 +199,38 @@ function Header() {
               )}
             </ul>
 
-            <Form onSubmit={submitHandler} className="d-flex gap-2">
-              <Form.Select 
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-auto"
-                style={{ minWidth: '150px' }}
-              >
-                <option value="">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat._id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Form.Select>
-              <Form.Control
-                type="search"
-                placeholder="Search products..."
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className="me-2"
-              />
-              <Button 
-                variant="light" 
-                type="button"
-                onClick={() => setShowFilter(true)}
-                className="d-flex align-items-center"
-              >
-                <i className="fas fa-filter"></i>
-              </Button>
+            <Form onSubmit={submitHandler} className="d-flex flex-wrap gap-2 mt-3 mt-lg-0">
+              <div className="d-flex flex-grow-1">
+                <Form.Control
+                  type="search"
+                  placeholder="Search products..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  className="me-2 flex-grow-1"
+                  size="sm"
+                />
+                <Button 
+                  variant="light" 
+                  type="button"
+                  onClick={() => setShowFilter(true)}
+                  className="d-flex align-items-center"
+                  size="sm"
+                >
+                  <i className="fas fa-filter"></i>
+                </Button>
+              </div>
               <Button 
                 variant="light" 
                 type="submit"
                 className="d-flex align-items-center gap-2"
+                size="sm"
               >
                 <i className="fas fa-search"></i>
-                Search
+                <span className="d-none d-sm-inline">Search</span>
               </Button>
             </Form>
-          </div>
-        </div>
+          </Navbar.Collapse>
+        </Container>
       </Navbar>
 
       {/* Price Filter Modal */}

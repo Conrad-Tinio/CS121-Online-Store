@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Card, Image } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import Message from './Message';
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -10,15 +11,25 @@ const Checkout = () => {
     const [isCheckoutComplete, setIsCheckoutComplete] = useState(false);
     const [completedOrder, setCompletedOrder] = useState(null);
 
+    // Get user login information
+    const userLogin = useSelector(state => state.userLogin);
+    const { userInfo } = userLogin;
+
     // Get cart items from Redux store
     const cart = useSelector(state => state.cart);
     const { cartItems } = cart;
     const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.qty), 0);
 
-    // Redirect if cart is empty and checkout not complete
-    if (cartItems.length === 0 && !isCheckoutComplete) {
-        navigate('/cart');
-    }
+    useEffect(() => {
+        // Redirect to login if not authenticated
+        if (!userInfo) {
+            navigate('/login');
+        }
+        // Redirect if cart is empty and checkout not complete
+        else if (cartItems.length === 0 && !isCheckoutComplete) {
+            navigate('/cart');
+        }
+    }, [userInfo, cartItems, isCheckoutComplete, navigate]);
 
     const handleCheckout = async () => {
         try {
@@ -50,6 +61,25 @@ const Checkout = () => {
         }
     };
 
+    const continueShoppingHandler = () => {
+        navigate('/');
+    };
+
+    const backToCartHandler = () => {
+        navigate('/cart');
+    };
+
+    // If not authenticated, show login message
+    if (!userInfo) {
+        return (
+            <Container className="py-5">
+                <Message variant='info'>
+                    Please <Link to="/login">login</Link> to checkout
+                </Message>
+            </Container>
+        );
+    }
+
     if (isCheckoutComplete && completedOrder) {
         return (
             <Container className="py-5">
@@ -70,7 +100,7 @@ const Checkout = () => {
                         <Button 
                             variant="primary" 
                             className="mt-4"
-                            onClick={() => navigate('/')}
+                            onClick={continueShoppingHandler}
                         >
                             Continue Shopping
                         </Button>
@@ -82,6 +112,25 @@ const Checkout = () => {
 
     return (
         <Container className="py-5">
+            <Row className="mb-4">
+                <Col className="d-flex justify-content-between">
+                    <Button 
+                        variant="outline-secondary" 
+                        className="d-flex align-items-center"
+                        onClick={backToCartHandler}
+                    >
+                        <i className="fas fa-arrow-left me-2"></i> Back to Cart
+                    </Button>
+                    <Button 
+                        variant="outline-primary" 
+                        className="d-flex align-items-center"
+                        onClick={continueShoppingHandler}
+                    >
+                        <i className="fas fa-shopping-bag me-2"></i> Continue Shopping
+                    </Button>
+                </Col>
+            </Row>
+            
             <h2 className="mb-4">Checkout</h2>
             <Row>
                 <Col md={8}>
@@ -117,10 +166,17 @@ const Checkout = () => {
                             </div>
                             <Button 
                                 variant="primary" 
-                                className="w-100"
+                                className="w-100 mb-2"
                                 onClick={handleCheckout}
                             >
                                 Complete Purchase
+                            </Button>
+                            <Button 
+                                variant="outline-secondary" 
+                                className="w-100"
+                                onClick={continueShoppingHandler}
+                            >
+                                Continue Shopping
                             </Button>
                         </Card.Body>
                     </Card>

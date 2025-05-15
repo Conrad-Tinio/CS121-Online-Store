@@ -11,10 +11,14 @@ function HomeScreen() {
     const dispatch = useDispatch()
     const location = useLocation()
     const searchParams = new URLSearchParams(location.search)
-
+    
     const productsList = useSelector(state => state.productsList)
     const { error, loading, products } = productsList
 
+    // Get current category from URL
+    const currentCategory = searchParams.get('category') || ''
+
+    // Fetch products based on filters
     useEffect(() => {
         const keyword = searchParams.get('keyword') || ''
         const category = searchParams.get('category') || ''
@@ -26,7 +30,9 @@ function HomeScreen() {
 
     return (
         <Container className="py-3">
-            <h1>Latest Products</h1>
+            <h1>
+                {currentCategory ? `${currentCategory} Products` : 'All Products'}
+            </h1>
             {loading ? <Loader />
                 : error ? <Message variant='danger'>{error}</Message>
                     : products.length === 0 ? <Message variant='info'>No products found</Message>

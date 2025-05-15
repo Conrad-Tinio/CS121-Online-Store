@@ -12,10 +12,18 @@ export const listProducts = (keyword = '', category = '', minPrice = '', maxPric
   try {
     dispatch({ type: PRODUCT_LIST_REQUEST });
 
-    let url = `/api/products/?keyword=${keyword}`;
-    if (category) url += `&category=${category}`;
-    if (minPrice) url += `&min_price=${minPrice}`;
-    if (maxPrice) url += `&max_price=${maxPrice}`;
+    // Build the URL with correct query parameters
+    const params = new URLSearchParams();
+    if (keyword) params.append('keyword', keyword);
+    if (category) params.append('category', category);
+    if (minPrice) params.append('min_price', minPrice);
+    if (maxPrice) params.append('max_price', maxPrice);
+    
+    const queryString = params.toString();
+    const url = `/api/products/${queryString ? `?${queryString}` : ''}`;
+    
+    console.log('Fetching products with URL:', url);
+    console.log('Category filter:', category);
 
     const { data } = await axios.get(url);
 

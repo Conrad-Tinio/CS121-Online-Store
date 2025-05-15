@@ -110,6 +110,10 @@ def getUser(request):
 def registerUser(request):
     data=request.data
     try:
+        # Check if email already exists - explicitly check before creation
+        if User.objects.filter(email=data['email']).exists():
+            return Response({'details': "A user with this email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+            
         user= User.objects.create(first_name=data['fname'],
                                   last_name=data['lname'],
                                   username=data['email'],
@@ -134,10 +138,11 @@ def registerUser(request):
         EmailThread(email_message).start()
         # serialize=UserSerializerWithToken(user,many=False)
         message={'details': "Please check your email to activate your account."} 
-        return Response(message)
+        return Response(message, status=status.HTTP_201_CREATED)
+    except KeyError as e:
+        return Response({'details': f"Missing required field: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        message={'details': "User with this email already exists or something went wrong."}
-        return Response(message)
+        return Response({'details': "Something went wrong during registration."}, status=status.HTTP_400_BAD_REQUEST)
 
 class ActivateAccountView(View):
     def get(self,request,uidb64,token):

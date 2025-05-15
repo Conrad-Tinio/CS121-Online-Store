@@ -14,17 +14,28 @@ function ProductScreen({ params }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState(1);
+  const [showLoginMessage, setShowLoginMessage] = useState(false);
   const dispatch = useDispatch();
   const productDetails = useSelector((state) => state.productDetails);
   const { error, loading, product } = productDetails;
+  
+  // Get user login information
+  const userLogin = useSelector((state) => state.userLogin);
+  const { userInfo } = userLogin;
 
   useEffect(() => {
     dispatch(listProductDetails(id))
   }, [dispatch,params]);
 
   const addToCartHandler = () => {
-    navigate(`/cart/${id}?quantity=${quantity}`)
+    if (!userInfo) {
+      setShowLoginMessage(true);
+      // Optional: automatically redirect to login after a delay
+      // setTimeout(() => navigate('/login'), 3000);
+    } else {
+      navigate(`/cart/${id}?quantity=${quantity}`);
+    }
   }
 
   return (
@@ -89,6 +100,14 @@ function ProductScreen({ params }) {
                       </Row>
                     </ListGroup.Item>
 
+                    {showLoginMessage && (
+                      <ListGroup.Item>
+                        <Message variant="info">
+                          Please <Link to="/login">login</Link> to add items to your cart
+                        </Message>
+                      </ListGroup.Item>
+                    )}
+
                     {product.stockCount > 0 && (
                         <ListGroup.Item>
                           <Row>
@@ -118,7 +137,7 @@ function ProductScreen({ params }) {
                         type="button"
                         onClick={addToCartHandler}
                       >
-                        Add to Cart
+                        {userInfo ? 'Add to Cart' : 'Login to Add to Cart'}
                       </Button>
                     </ListGroup.Item>
                   </ListGroup>
