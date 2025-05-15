@@ -12,8 +12,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 
 # from .products import products
-from .models import Products
-from .serializers import ProductsSerializer, UserSerializer, UserSerializerWithToken
+from .models import Products, Category
+from .serializers import ProductsSerializer, UserSerializer, UserSerializerWithToken, CategorySerializer
 
 # for sending mails and generate token
 from django.template.loader import render_to_string
@@ -42,8 +42,32 @@ def getRoutes(request):
 
 @api_view(['GET'])
 def getProducts(request):
-    products=Products.objects.all()
-    serializer=ProductsSerializer(products,many=True)
+    query = request.query_params.get('keyword', '')
+    category = request.query_params.get('category', '')
+    min_price = request.query_params.get('min_price')
+    max_price = request.query_params.get('max_price')
+    
+    # Start with all products
+    products = Products.objects.all()
+    
+    # Filter by category if specified
+    if category:
+        products = products.filter(category__name__iexact=category)
+    
+    # Filter by search query
+    if query:
+        products = products.filter(productName__icontains=query)
+    
+    # Filter by price range
+    if min_price:
+        products = products.filter(price__gte=float(min_price))
+    if max_price:
+        products = products.filter(price__lte=float(max_price))
+    
+    # Order by name
+    products = products.order_by('productName')
+    
+    serializer = ProductsSerializer(products, many=True)
     return Response(serializer.data)
 
 
@@ -152,3 +176,9 @@ def update_stock(request):
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)   
+
+@api_view(['GET'])
+def getCategories(request):
+    categories = Category.objects.all().order_by('name')
+    serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)   

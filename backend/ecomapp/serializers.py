@@ -1,45 +1,49 @@
 from rest_framework import serializers
-from .models import Products
+from .models import Products, Category
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-class ProductsSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model=Products
-        fields='__all__'
+        model = Category
+        fields = '__all__'
+
+class ProductsSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    
+    class Meta:
+        model = Products
+        fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
-    name=serializers.SerializerMethodField(read_only=True)
-    _id=serializers.SerializerMethodField(read_only=True)
-    isAdmin=serializers.SerializerMethodField(read_only=True)
+    name = serializers.SerializerMethodField(read_only=True)
+    _id = serializers.SerializerMethodField(read_only=True)
+    isAdmin = serializers.SerializerMethodField(read_only=True)
    
     class Meta:
-        model=User
-        fields=['id','_id','username','email','name','isAdmin']
+        model = User
+        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin']
     
-    def get_name(self,obj):
-        firstname=obj.first_name
-        lastname=obj.last_name
-        name=firstname+' '+lastname
-        if name=='':
-            name=obj.email[:5]
-            return name
+    def get_name(self, obj):
+        name = obj.first_name
+        if name == '':
+            name = obj.email
         return name
     
-    def get__id(self,obj):
+    def get__id(self, obj):
         return obj.id
 
-    def get_isAdmin(self,obj):
+    def get_isAdmin(self, obj):
         return obj.is_staff
     
     
 class UserSerializerWithToken(UserSerializer):
-    token=serializers.SerializerMethodField(read_only=True)
+    token = serializers.SerializerMethodField(read_only=True)
     class Meta:
-        model=User
-        fields=['id','_id','username','email','name','isAdmin','token']
+        model = User
+        fields = ['id', '_id', 'username', 'email', 'name', 'isAdmin', 'token']
     
-    def get_token(self,obj):
-        token=RefreshToken.for_user(obj)
+    def get_token(self, obj):
+        token = RefreshToken.for_user(obj)
         return str(token.access_token)

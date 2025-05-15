@@ -8,10 +8,16 @@ import {
   PRODUCT_DETAILS_FAIL
 } from "../constants/productConstants";
 
-export const listProducts = () => async (dispatch) => {
+export const listProducts = (keyword = '', category = '', minPrice = '', maxPrice = '') => async (dispatch) => {
   try {
     dispatch({ type: PRODUCT_LIST_REQUEST });
-    const { data } = await axios.get(`/api/products`);
+
+    let url = `/api/products/?keyword=${keyword}`;
+    if (category) url += `&category=${category}`;
+    if (minPrice) url += `&min_price=${minPrice}`;
+    if (maxPrice) url += `&max_price=${maxPrice}`;
+
+    const { data } = await axios.get(url);
 
     dispatch({
       type: PRODUCT_LIST_SUCCESS,
