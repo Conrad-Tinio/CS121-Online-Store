@@ -13,6 +13,7 @@
   - python manage.py runserver
 * On a new terminal, run your frontend server:
   - cd frontend
+  - cd ecommerce
   - npm install (install React dependencies first)
   - After installation -> npm start
 
