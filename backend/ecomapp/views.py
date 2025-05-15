@@ -25,6 +25,7 @@ from django.conf import settings
 from django.views.generic import View
 
 import threading
+from django.db import transaction
 
 class EmailThread(threading.Thread):
     def __init__(self, email_message):
@@ -127,3 +128,27 @@ class ActivateAccountView(View):
             return render(request,"activatesuccess.html")
         else:
             return render(request,"activatefail.html")   
+
+@api_view(['POST'])
+def update_stock(request):
+    try:
+        with transaction.atomic():
+            product_id = request.data.get('productId')
+            quantity = request.data.get('quantity')
+            
+            if not product_id or not quantity:
+                return Response({'detail': 'Product ID and quantity are required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            product = Products.objects.get(_id=product_id)
+            if product.stockCount < quantity:
+                return Response({'detail': 'Not enough stock available'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            product.stockCount -= quantity
+            product.save()
+            
+            return Response({'detail': 'Stock updated successfully'}, status=status.HTTP_200_OK)
+            
+    except Products.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)   

@@ -4,6 +4,7 @@ import { composeWithDevTools } from '@redux-devtools/extension';
 import { productsListReducers, productDetailsReducers } from './reducers/productReducers';
 import { userLoginReducer, userRegisterReducer } from './reducers/userReducers';
 import { cartReducer } from './reducers/cartReducers';
+import { checkoutReducer } from './reducers/checkoutReducer';
 
 
 const reducer = combineReducers({
@@ -11,15 +12,27 @@ const reducer = combineReducers({
     productDetails: productDetailsReducers, 
     userLogin: userLoginReducer, 
     userRegister: userRegisterReducer,
-    cart: cartReducer
+    cart: cartReducer,
+    checkout: checkoutReducer
 })
 
 const cartItemsFromStorage = localStorage.getItem('cartItems') ?
     JSON.parse(localStorage.getItem('cartItems')) : []
 
-const initialState={
-    cart:{cartItems:cartItemsFromStorage}
+const shippingAddressFromStorage = localStorage.getItem('shippingAddress') ?
+    JSON.parse(localStorage.getItem('shippingAddress')) : {}
+
+const paymentMethodFromStorage = localStorage.getItem('paymentMethod') ?
+    JSON.parse(localStorage.getItem('paymentMethod')) : ''
+
+const initialState = {
+    cart: { cartItems: cartItemsFromStorage },
+    checkout: {
+        shippingAddress: shippingAddressFromStorage,
+        paymentMethod: paymentMethodFromStorage
+    }
 }
+
 const middleware=[thunk]
 const store = createStore(reducer,initialState,composeWithDevTools(applyMiddleware(...middleware)))
 

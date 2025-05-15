@@ -7,14 +7,11 @@ import { addToCart, removeFromCart } from '../../actions/cartActions';
 import { useDispatch, useSelector } from "react-redux";
 import { Form } from 'react-bootstrap';
 
-
-
 function CartScreen({params}) {
-  
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch(); // Add this line to define dispatch
+  const dispatch = useDispatch();
 
   const productId = id 
   const qty = location.search ? Number(location.search.split('=')[1]) : 1
@@ -22,6 +19,10 @@ function CartScreen({params}) {
 
   const cart = useSelector(state => state.cart)
   const { cartItems } = cart
+
+  // Calculate subtotal
+  const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
+  const itemsCount = cartItems.reduce((acc, item) => acc + item.qty, 0)
 
   useEffect(() => {
     if(productId) {
@@ -34,12 +35,11 @@ function CartScreen({params}) {
   };
 
   const checkoutHandler = () => {
-    navigate("/login?redirect=shipping")
+    navigate("/checkout");
   }
 
   return (
-    <>
-      <Container>
+    <Container className="py-3">
       <Row> 
         <Col md={8}>
           <h1>Cart Items</h1>
@@ -91,13 +91,44 @@ function CartScreen({params}) {
                 </ListGroup.Item>
               ))}
             </ListGroup>
-          )
+          )}
+        </Col>
 
-          }
+        <Col md={4}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Order Summary</Card.Title>
+              <ListGroup variant='flush'>
+                <ListGroup.Item>
+                  <Row>
+                    <Col>Items ({itemsCount}):</Col>
+                    <Col>₱{subtotal}</Col>
+                  </Row>
+                </ListGroup.Item>
+
+                <ListGroup.Item>
+                  <Row>
+                    <Col>Total:</Col>
+                    <Col>₱{subtotal}</Col>
+                  </Row>
+                </ListGroup.Item>
+
+                <ListGroup.Item>
+                  <Button
+                    type='button'
+                    className='w-100'
+                    disabled={cartItems.length === 0}
+                    onClick={checkoutHandler}
+                  >
+                    Proceed to Checkout
+                  </Button>
+                </ListGroup.Item>
+              </ListGroup>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
-      </Container>
-    </>
+    </Container>
   )
 }
 
