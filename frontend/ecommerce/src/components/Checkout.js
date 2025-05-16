@@ -4,12 +4,15 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Message from './Message';
+import DeliveryLocationMap from './DeliveryLocationMap';
 
 const Checkout = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isCheckoutComplete, setIsCheckoutComplete] = useState(false);
     const [completedOrder, setCompletedOrder] = useState(null);
+    const [deliveryLocation, setDeliveryLocation] = useState(null);
+    const [showLocationPicker, setShowLocationPicker] = useState(false);
 
     // Get user login information
     const userLogin = useSelector(state => state.userLogin);
@@ -31,12 +34,23 @@ const Checkout = () => {
         }
     }, [userInfo, cartItems, isCheckoutComplete, navigate]);
 
+    const handleLocationSelect = (location) => {
+        setDeliveryLocation(location);
+        setShowLocationPicker(false);
+    };
+
     const handleCheckout = async () => {
+        if (!deliveryLocation) {
+            alert('Please select a delivery location before completing your purchase.');
+            return;
+        }
+
         try {
             // Store current cart items and total for display after clearing cart
             const orderDetails = {
                 items: [...cartItems],
-                total: cartTotal
+                total: cartTotal,
+                deliveryLocation
             };
 
             // Update stock in backend
@@ -97,6 +111,10 @@ const Checkout = () => {
                         <div className="mt-4">
                             <h5>Total: ₱{completedOrder.total.toFixed(2)}</h5>
                         </div>
+                        <div className="mt-2">
+                            <p>Delivery Location: {completedOrder.deliveryLocation.address}</p>
+                            <p>Coordinates: {completedOrder.deliveryLocation.position[0].toFixed(6)}, {completedOrder.deliveryLocation.position[1].toFixed(6)}</p>
+                        </div>
                         <Button 
                             variant="primary" 
                             className="mt-4"
@@ -154,6 +172,38 @@ const Checkout = () => {
                             </Card.Body>
                         </Card>
                     ))}
+
+                    {showLocationPicker ? (
+                        <DeliveryLocationMap onLocationSelect={handleLocationSelect} />
+                    ) : (
+                        <Card className="mb-4">
+                            <Card.Body>
+                                <h4>Delivery Location</h4>
+                                {deliveryLocation ? (
+                                    <div>
+                                        <p><strong>Address:</strong> {deliveryLocation.address}</p>
+                                        <p><strong>Coordinates:</strong> {deliveryLocation.position[0].toFixed(6)}, {deliveryLocation.position[1].toFixed(6)}</p>
+                                        <Button 
+                                            variant="outline-secondary" 
+                                            onClick={() => setShowLocationPicker(true)}
+                                        >
+                                            Change Location
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p>No delivery location selected.</p>
+                                        <Button 
+                                            variant="primary" 
+                                            onClick={() => setShowLocationPicker(true)}
+                                        >
+                                            Select Delivery Location
+                                        </Button>
+                                    </div>
+                                )}
+                            </Card.Body>
+                        </Card>
+                    )}
                 </Col>
                 <Col md={4}>
                     <Card>
@@ -168,6 +218,7 @@ const Checkout = () => {
                                 variant="primary" 
                                 className="w-100 mb-2"
                                 onClick={handleCheckout}
+                                disabled={!deliveryLocation}
                             >
                                 Complete Purchase
                             </Button>

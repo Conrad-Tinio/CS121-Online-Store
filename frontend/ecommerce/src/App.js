@@ -12,6 +12,7 @@ import Checkout from "./components/Checkout";
 import Notification from "./components/Notification";
 import { useDispatch, useSelector } from "react-redux";
 import store from "./store";
+import 'leaflet/dist/leaflet.css';
 
 // Wrapper component to use Redux hooks
 const AppContent = () => {

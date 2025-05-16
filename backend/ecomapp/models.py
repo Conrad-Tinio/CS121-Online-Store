@@ -29,3 +29,13 @@ class Products(models.Model):
 
     def __str__(self):
         return self.productName
+
+class DeliveryLocation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    address_details = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s location ({self.latitude}, {self.longitude})"
