@@ -46,7 +46,14 @@ const Checkout = () => {
             console.log('Cart empty and checkout not complete, redirecting to cart');
             navigate('/cart');
         }
-    }, [userInfo, cartItems, isCheckoutComplete, navigate]);
+
+        // Log the current state for debugging
+        console.log('Current checkout state in useEffect:', { 
+            cartItemsLength: cartItems.length, 
+            isCheckoutComplete, 
+            completedOrder 
+        });
+    }, [userInfo, cartItems, isCheckoutComplete, navigate, completedOrder]);
 
     const handleLocationSelect = (location) => {
         setDeliveryLocation(location);
@@ -61,6 +68,27 @@ const Checkout = () => {
 
         try {
             setIsSubmitting(true);
+            
+            // Store current cart items and total for display after clearing cart
+            const orderDetails = {
+                items: cartItems.map(item => ({
+                    product: item.product,
+                    productName: item.productName,
+                    qty: item.qty,
+                    price: item.price,
+                    image: item.image
+                })),
+                total: cartTotal,
+                deliveryLocation
+            };
+
+            // Save order details before clearing cart
+            setCompletedOrder(orderDetails);
+            
+            // Set checkout complete immediately to prioritize showing the success page
+            setIsCheckoutComplete(true);
+            
+            // Create the order
             const config = {
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,7 +96,6 @@ const Checkout = () => {
                 }
             };
 
-            // Create the order
             const orderData = {
                 order_items: cartItems.map(item => ({
                     product_id: item.product,
@@ -85,24 +112,19 @@ const Checkout = () => {
                 total_price: cartTotal
             };
 
-            const response = await axios.post('/api/orders/create/', orderData, config);
-            setIsSubmitting(false);
-            navigate(`/order/${response.data.id}`);
-
-            // Store current cart items and total for display after clearing cart
-            const orderDetails = {
-                items: [...cartItems],
-                total: cartTotal,
-                deliveryLocation
-            };
-
-            // Save order details before clearing cart
-            setCompletedOrder(orderDetails);
-
-            // Clear cart
+            // Clear cart before API call to ensure UI updates
             dispatch({ type: 'CART_CLEAR_ITEMS' });
             localStorage.removeItem('cartItems');
-            setIsCheckoutComplete(true);
+
+            console.log('Checkout complete, order details:', orderDetails);
+            console.log('Setting isCheckoutComplete to true');
+            
+            // Make API call after state updates
+            const response = await axios.post('/api/orders/create/', orderData, config);
+            setIsSubmitting(false);
+            
+            // Save order ID for future reference if needed
+            console.log('Order created with ID:', response.data.id);
 
         } catch (error) {
             setIsSubmitting(false);
@@ -131,6 +153,7 @@ const Checkout = () => {
     }
 
     if (isCheckoutComplete && completedOrder) {
+        console.log('Rendering success page with:', { isCheckoutComplete, completedOrder });
         return (
             <Container className="py-5">
                 <Card>
@@ -158,6 +181,19 @@ const Checkout = () => {
                         >
                             Continue Shopping
                         </Button>
+                        
+                        {/* Add a button to view order details if needed */}
+                        <div className="mt-3">
+                            <Button 
+                                variant="outline-secondary"
+                                onClick={() => {
+                                    console.log('Navigate to orders page');
+                                    navigate('/orders');
+                                }}
+                            >
+                                View Your Orders
+                            </Button>
+                        </div>
                     </Card.Body>
                 </Card>
             </Container>
