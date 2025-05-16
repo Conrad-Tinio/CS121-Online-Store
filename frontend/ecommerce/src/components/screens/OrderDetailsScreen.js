@@ -1,26 +1,46 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Row, Col, Card, Image, Button, Badge } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import Message from '../Message'
+import Loader from '../Loader'
+import axios from 'axios'
 
 function OrderDetailsScreen() {
     const navigate = useNavigate()
     const { id } = useParams()
+    const [order, setOrder] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
 
     const userLogin = useSelector(state => state.userLogin)
     const { userInfo } = userLogin
 
-    const orderListMy = useSelector(state => state.orderListMy)
-    const { orders } = orderListMy
-
-    const order = orders ? orders.find(o => o.id === Number(id)) : null
-
     useEffect(() => {
         if (!userInfo) {
             navigate('/login')
+            return;
         }
-    }, [userInfo, navigate])
+
+        const fetchOrderDetails = async () => {
+            try {
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${userInfo.token}`
+                    }
+                }
+                const { data } = await axios.get(`/api/orders/${id}/`, config)
+                setOrder(data)
+                setLoading(false)
+            } catch (error) {
+                setError(error.response?.data?.detail || 'Error fetching order details')
+                setLoading(false)
+            }
+        }
+
+        fetchOrderDetails()
+    }, [userInfo, navigate, id])
 
     const formatDate = (dateString) => {
         const options = { 
@@ -31,6 +51,14 @@ function OrderDetailsScreen() {
             minute: '2-digit'
         }
         return new Date(dateString).toLocaleDateString(undefined, options)
+    }
+
+    if (loading) {
+        return <Loader />
+    }
+
+    if (error) {
+        return <Message variant='danger'>{error}</Message>
     }
 
     if (!order) {
@@ -123,7 +151,7 @@ function OrderDetailsScreen() {
                                     <div className="flex-grow-1">
                                         <h6 className="mb-0">{item.product.productName}</h6>
                                         <div className="text-muted">
-                                            {item.quantity} × ${item.product.price} = ${(item.quantity * item.product.price).toFixed(2)}
+                                            {item.quantity} × ₱{item.price} = ₱{(item.quantity * item.price).toFixed(2)}
                                         </div>
                                     </div>
                                 </div>
@@ -197,7 +225,7 @@ function OrderDetailsScreen() {
                             <hr />
                             <Row className="mb-2">
                                 <Col><strong>Total:</strong></Col>
-                                <Col className="text-end"><strong>${order.total_price}</strong></Col>
+                                <Col className="text-end"><strong>₱{order.total_price}</strong></Col>
                             </Row>
                         </Card.Body>
                     </Card>

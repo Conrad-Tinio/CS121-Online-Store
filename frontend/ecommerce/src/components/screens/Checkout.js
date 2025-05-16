@@ -3,10 +3,11 @@ import { Container, Row, Col, Button, Card, Image } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import Message from './Message';
-import DeliveryLocationMap from './DeliveryLocationMap';
+import Message from '../Message';
+import DeliveryLocationMap from '../DeliveryLocationMap';
 
 const Checkout = () => {
+    console.log('Checkout component rendering');
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isCheckoutComplete, setIsCheckoutComplete] = useState(false);
@@ -22,15 +23,27 @@ const Checkout = () => {
     // Get cart items from Redux store
     const cart = useSelector(state => state.cart);
     const { cartItems } = cart;
+    
+    console.log('Current state:', {
+        userInfo,
+        cartItems,
+        isCheckoutComplete,
+        deliveryLocation,
+        showLocationPicker
+    });
+
     const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.qty), 0);
 
     useEffect(() => {
+        console.log('Checkout useEffect running');
         // Redirect to login if not authenticated
         if (!userInfo) {
+            console.log('No user info, redirecting to login');
             navigate('/login');
         }
         // Redirect if cart is empty and checkout not complete
         else if (cartItems.length === 0 && !isCheckoutComplete) {
+            console.log('Cart empty and checkout not complete, redirecting to cart');
             navigate('/cart');
         }
     }, [userInfo, cartItems, isCheckoutComplete, navigate]);
@@ -92,6 +105,7 @@ const Checkout = () => {
             setIsCheckoutComplete(true);
 
         } catch (error) {
+            setIsSubmitting(false);
             console.error('Error during checkout:', error);
             alert(error.response?.data?.detail || 'There was an error processing your checkout. Please try again.');
         }

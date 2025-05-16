@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Loader from "../Loader";
 import Message from "../Message";
 import { Form } from "react-bootstrap";
+import { addToCart } from "../../actions/cartActions";
 
 function ProductScreen({ params }) {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ function ProductScreen({ params }) {
   const [quantity, setQuantity] = useState(1);
   const [showLoginMessage, setShowLoginMessage] = useState(false);
   const [loginButtonClicked, setLoginButtonClicked] = useState(false);
+  const [wishlistLoginClicked, setWishlistLoginClicked] = useState(false);
   const [notification, setNotification] = useState(null);
   const dispatch = useDispatch();
   const productDetails = useSelector((state) => state.productDetails);
@@ -116,13 +118,15 @@ function ProductScreen({ params }) {
       setShowLoginMessage(true);
       setLoginButtonClicked(true);
     } else {
-      navigate(`/cart/${id}?quantity=${quantity}`);
+      dispatch(addToCart(id, quantity));
+      navigate('/cart');
     }
   }
 
   const addToWishlistHandler = async () => {
     if (!userInfo) {
       setShowLoginMessage(true);
+      setWishlistLoginClicked(true);
       return;
     }
     
@@ -346,27 +350,38 @@ function ProductScreen({ params }) {
 
                     {product.stockCount === 0 && (
                       <ListGroup.Item>
-                        <Button
-                          className={`btn-block ${isInWishlist ? 'btn-secondary' : 'btn-info'}`}
-                          type="button"
-                          onClick={isInWishlist ? undefined : addToWishlistHandler}
-                          disabled={isInWishlist || wishlistLoading}
-                          style={{
-                            cursor: isInWishlist ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2s ease',
-                            opacity: 0.9
-                          }}
-                          onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                          onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
-                        >
-                          {wishlistLoading ? 'Adding to Wishlist...' : 
-                            !userInfo 
-                              ? 'Login to Add to Wishlist'
-                              : isInWishlist
-                                ? 'Already in Wishlist'
-                                : 'Add to Wishlist'
-                          }
-                        </Button>
+                        {!userInfo && wishlistLoginClicked ? (
+                          <Button
+                            className="btn-block btn-secondary"
+                            type="button"
+                            disabled
+                            style={{ cursor: 'not-allowed' }}
+                          >
+                            Login Required
+                          </Button>
+                        ) : (
+                          <Button
+                            className={`btn-block ${isInWishlist ? 'btn-secondary' : 'btn-info'}`}
+                            type="button"
+                            onClick={isInWishlist ? undefined : addToWishlistHandler}
+                            disabled={isInWishlist || wishlistLoading || (showLoginMessage && !userInfo)}
+                            style={{
+                              cursor: isInWishlist || (showLoginMessage && !userInfo) ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s ease',
+                              opacity: 0.9
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                            onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
+                          >
+                            {wishlistLoading ? 'Adding to Wishlist...' : 
+                              !userInfo 
+                                ? 'Login to Add to Wishlist'
+                                : isInWishlist
+                                  ? 'Already in Wishlist'
+                                  : 'Add to Wishlist'
+                            }
+                          </Button>
+                        )}
                       </ListGroup.Item>
                     )}
                   </ListGroup>

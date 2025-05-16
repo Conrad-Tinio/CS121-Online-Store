@@ -68,9 +68,30 @@ function Header() {
   // Handle category change
   const handleCategoryChange = (newCategory = '') => {
     console.log('Category changed to:', newCategory);
-    console.log('Current active tags:', activeTags);
-    setCategory(newCategory);
-    setShowFilter(true);
+    
+    // Create a new URLSearchParams object
+    const params = new URLSearchParams(location.search);
+    
+    // Clear existing category
+    params.delete('category');
+    
+    // Add new category if one is selected
+    if (newCategory) {
+      params.set('category', newCategory);
+    }
+    
+    // Keep other existing filters
+    const searchQuery = params.toString();
+    
+    // Navigate to the new URL
+    navigate({
+      pathname: '/',
+      search: searchQuery ? `?${searchQuery}` : ''
+    });
+    
+    // Close the filter popup and navbar
+    setShowFilter(false);
+    setExpanded(false);
   };
 
   // Handle tag click with debug logging
@@ -346,7 +367,7 @@ function Header() {
                     aria-haspopup="true"
                     aria-expanded="false"
                   >
-                    Welcome {userInfo.name}!
+                    {userInfo ? `Welcome, ${userInfo.name}!` : 'Welcome!'}
                   </button>
 
                   <div className="dropdown-menu">
@@ -487,7 +508,10 @@ function Header() {
               <Form.Label>Category</Form.Label>
               <Form.Select 
                 value={category} 
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  const newCategory = e.target.value;
+                  handleCategoryChange(newCategory);
+                }}
               >
                 <option value="">All Categories</option>
                 {categories.map(cat => (

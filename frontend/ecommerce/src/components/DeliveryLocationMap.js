@@ -1,95 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Button, Card, Form } from 'react-bootstrap';
-import fixLeafletIcon from '../LeafletFix';
-import axios from 'axios';
+import { Button, Card } from 'react-bootstrap';
+import L from 'leaflet';
 
-// Initialize the fix for Leaflet icons
-fixLeafletIcon();
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+    iconUrl: require('leaflet/dist/images/marker-icon.png'),
+    shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
 
 // Component that handles map clicks and marker position
-const LocationMarker = ({ position, setPosition }) => {
+function LocationMarker({ position, setPosition }) {
   useMapEvents({
     click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng]);
+      setPosition(e.latlng);
     },
   });
 
-  return position ? 
-    <Marker position={position} /> : null;
-};
+  return position ? <Marker position={position} /> : null;
+}
 
 const DeliveryLocationMap = ({ onLocationSelect }) => {
   const [position, setPosition] = useState(null);
   const [address, setAddress] = useState('');
-  const [initialPosition, setInitialPosition] = useState([14.5995, 120.9842]); // Default to Manila, Philippines
 
-  // Try to get user's current location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setInitialPosition([position.coords.latitude, position.coords.longitude]);
-        },
-        (error) => {
-          console.log('Error getting location:', error);
-          // Keep default location if geolocation fails
-        }
-      );
-    }
-  }, []);
-
-  const handleSubmit = () => {
-    if (position) {
-      onLocationSelect({
-        position,
-        address
-      });
-    } else {
+  const handleConfirmLocation = async () => {
+    if (!position) {
       alert('Please select a location on the map');
+      return;
+    }
+
+    try {
+      // Reverse geocoding using Nominatim
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}`
+      );
+      const data = await response.json();
+      const locationAddress = data.display_name;
+      setAddress(locationAddress);
+
+      onLocationSelect({
+        position: [position.lat, position.lng],
+        address: locationAddress
+      });
+    } catch (error) {
+      console.error('Error getting address:', error);
+      alert('Error getting address. Please try again.');
     }
   };
 
   return (
-    <div className="map-container mb-4">
-      <h4>Select Delivery Location</h4>
-      <p>Click on the map to select your delivery location</p>
-      
-      <div style={{ height: '400px', width: '100%', marginBottom: '1rem' }}>
-        <MapContainer 
-          center={initialPosition} 
-          zoom={13} 
-          scrollWheelZoom={true} 
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <LocationMarker position={position} setPosition={setPosition} />
-        </MapContainer>
-      </div>
-      
-      <Form.Group className="mb-3">
-        <Form.Label>Delivery Address Details</Form.Label>
-        <Form.Control 
-          as="textarea" 
-          rows={3} 
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="Enter additional address details (building name, floor, landmarks, etc.)"
-        />
-      </Form.Group>
-
-      <Button 
-        variant="primary" 
-        onClick={handleSubmit}
-        disabled={!position}
-      >
-        Confirm Location
-      </Button>
-    </div>
+    <Card className="mb-4">
+      <Card.Body>
+        <h4 className="mb-3">Select Delivery Location</h4>
+        <div style={{ height: '400px', width: '100%' }}>
+          <MapContainer
+            center={[14.5995, 120.9842]} // Manila coordinates
+            zoom={13}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            <LocationMarker position={position} setPosition={setPosition} />
+          </MapContainer>
+        </div>
+        <div className="mt-3">
+          <Button 
+            variant="primary" 
+            onClick={handleConfirmLocation}
+            disabled={!position}
+          >
+            Confirm Location
+          </Button>
+        </div>
+      </Card.Body>
+    </Card>
   );
 };
 

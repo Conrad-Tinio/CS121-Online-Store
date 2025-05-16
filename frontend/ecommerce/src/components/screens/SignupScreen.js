@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -10,6 +10,7 @@ import {
 } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Loader from "../Loader";
 import Message from "../Message";
 import { validEmail } from "./Regex";
@@ -32,18 +33,10 @@ function SignupScreen() {
   const userSignup = useSelector((state) => state.userRegister);
   const { loading, error, userInfo } = userSignup;
 
-  // Debug useEffect to monitor message changes
   useEffect(() => {
-    console.log("Message state changed:", message);
-  }, [message]);
-
-  useEffect(() => {
-    // If registration was successful, redirect to login immediately
     if (userInfo && userInfo.details === "Please check your email to activate your account.") {
-      // Just redirect without showing the message
       navigate("/login");
     }
-    // Display error message if registration failed
     else if (error) {
       console.log("Error from userSignup:", error);
       setMessage(error);
@@ -51,7 +44,6 @@ function SignupScreen() {
   }, [userInfo, error, navigate]);
 
   useEffect(() => {
-    // Check for activation message in localStorage
     const activateAccount = localStorage.getItem('activateMessage');
     if (activateAccount) {
       setMessage(activateAccount);
@@ -68,7 +60,6 @@ function SignupScreen() {
       setMessage("Please enter a valid email address.")
     } else {
       dispatch(register(fname, lname, email, password1))
-      // Only clear password fields, keep other fields
       setPassword1("")
       setPassword2("")
     }
@@ -130,11 +121,7 @@ function SignupScreen() {
 
                   <Form.Group className="mb-3">
                     <Form.Label>Password</Form.Label>
-                    <InputGroup className="mb-3">
-                      <InputGroup.Checkbox 
-                        onChange={togglePassword1}
-                        checked={showPassword1}
-                      />{" "}
+                    <InputGroup>
                       <Form.Control
                         placeholder="Password"
                         required
@@ -142,17 +129,25 @@ function SignupScreen() {
                         onChange={(e) => setPassword1(e.target.value)}
                         type={showPassword1 ? "text" : "password"}
                         id="password1"
+                        style={{ 
+                          WebkitTextSecurity: showPassword1 ? 'none' : 'disc',
+                          MozTextSecurity: showPassword1 ? 'none' : 'disc'
+                        }}
+                        className="hide-password-reveal"
                       />
+                      <Button 
+                        variant="outline-secondary"
+                        onClick={togglePassword1}
+                        style={{ border: 'none', background: 'transparent' }}
+                      >
+                        {showPassword1 ? <FaEyeSlash /> : <FaEye />}
+                      </Button>
                     </InputGroup>
                   </Form.Group>
 
                   <Form.Group className="mb-3">
                     <Form.Label>Confirm Password</Form.Label>
-                    <InputGroup className="mb-3">
-                      <InputGroup.Checkbox
-                        onChange={togglePassword2}
-                        checked={showPassword2}
-                      />{" "}
+                    <InputGroup>
                       <Form.Control
                         placeholder="Confirm Password"
                         required
@@ -160,9 +155,41 @@ function SignupScreen() {
                         onChange={(e) => setPassword2(e.target.value)}
                         type={showPassword2 ? "text" : "password"}
                         id="password2"
+                        style={{ 
+                          WebkitTextSecurity: showPassword2 ? 'none' : 'disc',
+                          MozTextSecurity: showPassword2 ? 'none' : 'disc'
+                        }}
+                        className="hide-password-reveal"
                       />
+                      <Button 
+                        variant="outline-secondary"
+                        onClick={togglePassword2}
+                        style={{ border: 'none', background: 'transparent' }}
+                      >
+                        {showPassword2 ? <FaEyeSlash /> : <FaEye />}
+                      </Button>
                     </InputGroup>
                   </Form.Group>
+
+                  <style>
+                    {`
+                      .hide-password-reveal::-ms-reveal,
+                      .hide-password-reveal::-ms-clear {
+                        display: none;
+                      }
+                      input[type="password"]::-webkit-contacts-auto-fill-button,
+                      input[type="password"]::-webkit-credentials-auto-fill-button,
+                      input[type="password"]::-webkit-password-toggle {
+                        visibility: hidden;
+                        display: none !important;
+                        pointer-events: none;
+                        height: 0;
+                        width: 0;
+                        margin: 0;
+                      }
+                    `}
+                  </style>
+
                   <br />
                   <div className="d-grid gap-2">
                     <Button className="btn btn-md btn-success" type="submit">

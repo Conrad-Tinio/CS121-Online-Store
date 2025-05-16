@@ -498,3 +498,13 @@ def wishlist_operations(request, pk=None):
             
     except Exception as e:
         return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)   
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_order_details(request, pk):
+    try:
+        order = Order.objects.get(id=pk, user=request.user)
+        serializer = OrderSerializer(order, many=False)
+        return Response(serializer.data)
+    except Order.DoesNotExist:
+        return Response({'detail': 'Order not found'}, status=404)   

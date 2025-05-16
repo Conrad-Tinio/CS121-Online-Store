@@ -36,7 +36,12 @@ function OrderHistoryScreen() {
     }
 
     const handleRowClick = (orderId) => {
-        navigate(`/order/${orderId}`)
+        if (!orderId) return;
+        try {
+            navigate(`/order/${orderId}`);
+        } catch (error) {
+            console.error('Error navigating to order:', error);
+        }
     }
 
     const renderItemImages = (items) => {

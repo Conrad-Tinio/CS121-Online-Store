@@ -7,9 +7,11 @@ import {
   Form,
   Card,
   InputGroup,
+  Alert,
 } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Loader from "../Loader";
 import Message from "../Message";
 import { validEmail } from "./Regex";
@@ -31,9 +33,9 @@ function LoginScreen() {
   
   useEffect(() => {
     if(userInfo) {
-      navigate('/')
+      navigate(redirect);
     }
-  }, [userInfo, redirect])
+  }, [userInfo, redirect, navigate])
 
   useEffect(() => {
     const activateAccount = localStorage.getItem('activateMessage');
@@ -82,11 +84,7 @@ function LoginScreen() {
 
                   <Form.Group className="mb-3">
                     <Form.Label>Password</Form.Label>
-                    <InputGroup className="mb-3">
-                      <InputGroup.Checkbox 
-                        onChange={togglePassword}
-                        checked={showPassword}
-                      />{" "}
+                    <InputGroup>
                       <Form.Control
                         placeholder="Password"
                         required
@@ -94,9 +92,40 @@ function LoginScreen() {
                         onChange={(e) => setPassword1(e.target.value)}
                         type={showPassword ? "text" : "password"}
                         id="password1"
+                        style={{ 
+                          WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                          MozTextSecurity: showPassword ? 'none' : 'disc'
+                        }}
+                        className="hide-password-reveal"
                       />
+                      <Button 
+                        variant="outline-secondary"
+                        onClick={togglePassword}
+                        style={{ border: 'none', background: 'transparent' }}
+                      >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </Button>
                     </InputGroup>
                   </Form.Group>
+
+                  <style>
+                    {`
+                      .hide-password-reveal::-ms-reveal,
+                      .hide-password-reveal::-ms-clear {
+                        display: none;
+                      }
+                      input[type="password"]::-webkit-contacts-auto-fill-button,
+                      input[type="password"]::-webkit-credentials-auto-fill-button,
+                      input[type="password"]::-webkit-password-toggle {
+                        visibility: hidden;
+                        display: none !important;
+                        pointer-events: none;
+                        height: 0;
+                        width: 0;
+                        margin: 0;
+                      }
+                    `}
+                  </style>
 
                   <br />
                   <div className="d-grid gap-2">

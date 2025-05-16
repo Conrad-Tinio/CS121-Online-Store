@@ -46,6 +46,16 @@ function CartScreen({params}) {
   };
 
   const checkoutHandler = () => {
+    console.log('Navigating to checkout');
+    if (!userInfo) {
+      console.log('No user info, redirecting to login');
+      navigate('/login');
+      return;
+    }
+    if (cartItems.length === 0) {
+      console.log('Cart is empty, cannot proceed to checkout');
+      return;
+    }
     navigate("/checkout");
   }
 
