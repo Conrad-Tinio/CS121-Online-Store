@@ -11,6 +11,9 @@ function Header() {
   const location = useLocation();
   const dispatch = useDispatch();
   
+  // Check if we're on the login page
+  const isLoginPage = location.pathname === '/login';
+
   // Initialize state from URL parameters
   const searchParams = new URLSearchParams(location.search);
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
@@ -395,14 +398,16 @@ function Header() {
                     className="me-2"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
+                    disabled={isLoginPage}
                   />
-                  <Button type="submit" variant="light" className="px-3">
+                  <Button type="submit" variant="light" className="px-3" disabled={isLoginPage}>
                     <i className="fas fa-search"></i>
                   </Button>
                   <Button
                     variant="light"
                     className="ms-2 position-relative"
                     onClick={() => setShowFilter(!showFilter)}
+                    disabled={isLoginPage}
                   >
                     <i className="fas fa-filter"></i>
                     {hasActiveFilters() && (
