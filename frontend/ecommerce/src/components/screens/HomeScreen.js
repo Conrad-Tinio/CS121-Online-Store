@@ -10,23 +10,25 @@ import { useLocation } from 'react-router-dom'
 function HomeScreen() {
     const dispatch = useDispatch()
     const location = useLocation()
-    const searchParams = new URLSearchParams(location.search)
     
     const productsList = useSelector(state => state.productsList)
     const { error, loading, products } = productsList
 
     // Get current category from URL
+    const searchParams = new URLSearchParams(location.search)
     const currentCategory = searchParams.get('category') || ''
 
     // Fetch products based on filters
     useEffect(() => {
         const keyword = searchParams.get('keyword') || ''
         const category = searchParams.get('category') || ''
-        const minPrice = searchParams.get('min_price') || ''
-        const maxPrice = searchParams.get('max_price') || ''
+        const price_range = searchParams.get('price_range') || ''
+        const stock = searchParams.get('stock') || ''
         
-        dispatch(listProducts(keyword, category, minPrice, maxPrice))
-    }, [dispatch, location.search])
+        console.log('Current price range:', price_range)
+        console.log('Current stock filter:', stock)
+        dispatch(listProducts(keyword, category, price_range, stock))
+    }, [dispatch, location.search]) // searchParams is derived from location.search, so we don't need it in deps
 
     return (
         <Container className="py-3">

@@ -8,7 +8,7 @@ import {
   PRODUCT_DETAILS_FAIL
 } from "../constants/productConstants";
 
-export const listProducts = (keyword = '', category = '', minPrice = '', maxPrice = '') => async (dispatch) => {
+export const listProducts = (keyword = '', category = '', price_range = '', stock = '') => async (dispatch) => {
   try {
     dispatch({ type: PRODUCT_LIST_REQUEST });
 
@@ -16,14 +16,15 @@ export const listProducts = (keyword = '', category = '', minPrice = '', maxPric
     const params = new URLSearchParams();
     if (keyword) params.append('keyword', keyword);
     if (category) params.append('category', category);
-    if (minPrice) params.append('min_price', minPrice);
-    if (maxPrice) params.append('max_price', maxPrice);
+    if (price_range) params.append('price_range', price_range);
+    if (stock) params.append('stock', stock);
     
     const queryString = params.toString();
     const url = `/api/products/${queryString ? `?${queryString}` : ''}`;
     
     console.log('Fetching products with URL:', url);
-    console.log('Category filter:', category);
+    console.log('Price range filter:', price_range);
+    console.log('Stock filter:', stock);
 
     const { data } = await axios.get(url);
 

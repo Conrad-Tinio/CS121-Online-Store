@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Icon } from 'leaflet';
-import { Form, Button } from 'react-bootstrap';
+import { Button, Card, Form } from 'react-bootstrap';
 import fixLeafletIcon from '../LeafletFix';
+import axios from 'axios';
 
 // Initialize the fix for Leaflet icons
 fixLeafletIcon();

@@ -1,22 +1,9 @@
 import React from 'react'
 import { Card } from 'react-bootstrap'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Rating from './Rating'
 
 function Product({product}) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleCategoryClick = (e, categoryName) => {
-    e.preventDefault();
-    
-    // Preserve existing search parameters
-    const searchParams = new URLSearchParams(location.search);
-    searchParams.set('category', categoryName);
-    
-    navigate(`/?${searchParams.toString()}`);
-  }
-
   return (
     <Card className='my-3 p-3 rounded'>
         <Link to={`/product/${product._id}`}>

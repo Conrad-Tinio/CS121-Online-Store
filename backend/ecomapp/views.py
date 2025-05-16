@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
 
@@ -15,8 +15,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 
 # from .products import products
-from .models import Products, Category, Order, OrderItem, DeliveryLocation
-from .serializers import ProductsSerializer, UserSerializer, UserSerializerWithToken, CategorySerializer, OrderSerializer
+from .models import Products, Category, Order, OrderItem, DeliveryLocation, Wishlist
+from .serializers import ProductsSerializer, UserSerializer, UserSerializerWithToken, CategorySerializer, OrderSerializer, DeliveryLocationSerializer, WishlistSerializer
 
 # for sending mails and generate token
 from django.template.loader import render_to_string
@@ -29,6 +29,7 @@ from django.views.generic import View
 
 import threading
 from django.db import transaction
+from decimal import Decimal
 
 class EmailThread(threading.Thread):
     def __init__(self, email_message):
@@ -47,30 +48,151 @@ def getRoutes(request):
 def getProducts(request):
     query = request.query_params.get('keyword', '')
     category = request.query_params.get('category', '')
-    min_price = request.query_params.get('min_price')
-    max_price = request.query_params.get('max_price')
+    stock_filter = request.query_params.get('stock', '')
+    price_range = request.query_params.get('price_range', '')
+    
+    print(f"\n{'='*50}")
+    print("Processing product filter request")
+    print(f"{'='*50}")
+    print("\nReceived filter parameters:")
+    print(f"- Category: {category}")
+    print(f"- Stock filter: {stock_filter}")
+    print(f"- Price range: {price_range}")
+    print(f"- Search query: {query}")
     
     # Start with all products
     products = Products.objects.all()
+    initial_count = products.count()
+    print(f"\nInitial product count: {initial_count}")
     
-    # Filter by category if specified
+    # Print all products and their details before filtering
+    print("\nAll products before filtering:")
+    for p in products:
+        print(f"- {p.productName}: Price=₱{p.price}, Stock={p.stockCount}")
+    
+    # Define exact price ranges with Decimal for precise comparison
+    PRICE_RANGES = {
+        'budget': (Decimal('0.00'), Decimal('999.99')),
+        'midRange': (Decimal('1000.00'), Decimal('4999.99')),
+        'premium': (Decimal('5000.00'), Decimal('999999.99'))
+    }
+    
+    # Define stock ranges with exact boundaries
+    STOCK_RANGES = {
+        'inStock': Q(stockCount__gt=10),
+        'lowStock': Q(stockCount__gt=0) & Q(stockCount__lte=10),
+        'outOfStock': Q(stockCount=0)
+    }
+    
+    # Initialize filters list
+    filters = []
+    
+    # Add category filter
     if category:
-        products = products.filter(category__name__iexact=category)
+        cat_filter = Q(category__name__iexact=category)
+        filters.append(cat_filter)
+        print(f"\nAdding category filter: {category}")
     
-    # Filter by search query
+    # Add stock filter
+    if stock_filter and stock_filter in STOCK_RANGES:
+        stock_q = STOCK_RANGES[stock_filter]
+        filters.append(stock_q)
+        print(f"\nAdding stock filter: {stock_filter}")
+        print(f"Stock condition: {stock_q}")
+    
+    # Add price range filter
+    if price_range and price_range in PRICE_RANGES:
+        min_val, max_val = PRICE_RANGES[price_range]
+        price_q = Q(price__gte=min_val) & Q(price__lt=max_val)
+        filters.append(price_q)
+        print(f"\nAdding price range filter: {price_range}")
+        print(f"Price range: ₱{min_val} <= price < ₱{max_val}")
+        print(f"SQL query part: {price_q}")
+    
+    # Add search query filter
     if query:
-        products = products.filter(productName__icontains=query)
+        query_q = Q(productName__icontains=query)
+        filters.append(query_q)
+        print(f"\nAdding search filter: {query}")
     
-    # Filter by price range
-    if min_price:
-        products = products.filter(price__gte=float(min_price))
-    if max_price:
-        products = products.filter(price__lte=float(max_price))
+    # Apply all filters using AND operation
+    if filters:
+        # Combine all filters with AND
+        final_filter = filters.pop(0)
+        for f in filters:
+            final_filter &= f
+        print(f"\nApplying combined filters: {final_filter}")
+        products = products.filter(final_filter)
+    
+    # Verify each product meets ALL criteria
+    print("\nVerifying filtered products:")
+    products_to_remove = []
+    
+    for p in products:
+        print(f"\nChecking product: {p.productName}")
+        print(f"- Price: ₱{p.price}")
+        print(f"- Stock: {p.stockCount}")
+        
+        meets_all_criteria = True
+        
+        # Verify category
+        if category:
+            meets_category = p.category.name.lower() == category.lower()
+            print(f"Category check:")
+            print(f"- Required: {category}")
+            print(f"- Actual: {p.category.name}")
+            print(f"- Matches: {meets_category}")
+            meets_all_criteria &= meets_category
+        
+        # Verify stock status
+        if stock_filter:
+            if stock_filter == 'inStock':
+                meets_stock = p.stockCount > 10
+            elif stock_filter == 'lowStock':
+                meets_stock = 0 < p.stockCount <= 10
+            else:  # outOfStock
+                meets_stock = p.stockCount == 0
+            print(f"Stock check ({stock_filter}):")
+            print(f"- Required: {stock_filter}")
+            print(f"- Actual: {p.stockCount}")
+            print(f"- Matches: {meets_stock}")
+            meets_all_criteria &= meets_stock
+            
+        # Verify price range
+        if price_range and price_range in PRICE_RANGES:
+            min_val, max_val = PRICE_RANGES[price_range]
+            meets_price = min_val <= p.price < max_val
+            print(f"Price range check ({price_range}):")
+            print(f"- Required: ₱{min_val} <= price < ₱{max_val}")
+            print(f"- Actual: ₱{p.price}")
+            print(f"- Matches: {meets_price}")
+            meets_all_criteria &= meets_price
+        
+        if not meets_all_criteria:
+            print("❌ Product does not meet all criteria - will be removed")
+            products_to_remove.append(p.id)
+        else:
+            print("✓ Product meets all criteria")
+    
+    # Remove products that don't meet all criteria
+    if products_to_remove:
+        products = products.exclude(id__in=products_to_remove)
     
     # Order by name
     products = products.order_by('productName')
     
     serializer = ProductsSerializer(products, many=True)
+    final_count = len(serializer.data)
+    print(f"\nFinal product count: {final_count}")
+    
+    if final_count > 0:
+        print("\nFinal products:")
+        for p in products:
+            print(f"- {p.productName}: Price=₱{p.price}, Stock={p.stockCount}")
+    else:
+        print("\nNo products match all filters")
+    
+    print(f"\n{'='*50}")
     return Response(serializer.data)
 
 
@@ -333,3 +455,46 @@ def get_sales_stats(request):
         return Response({
             'error': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)   
+
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def wishlist_operations(request, pk=None):
+    try:
+        if request.method == 'GET':
+            wishlist_items = Wishlist.objects.filter(user=request.user)
+            serializer = WishlistSerializer(wishlist_items, many=True)
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            try:
+                product = Products.objects.get(_id=pk)
+            except Products.DoesNotExist:
+                return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Check if product is in stock
+            if product.stockCount > 0:
+                return Response({'detail': 'Product is in stock. Add to cart instead.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if already in wishlist
+            wishlist_exists = Wishlist.objects.filter(user=request.user, product=product).exists()
+            if wishlist_exists:
+                return Response({'detail': 'Product already in wishlist'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Add to wishlist
+            wishlist = Wishlist.objects.create(
+                user=request.user,
+                product=product
+            )
+            serializer = WishlistSerializer(wishlist)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        elif request.method == 'DELETE':
+            try:
+                wishlist_item = Wishlist.objects.get(user=request.user, product___id=pk)
+                wishlist_item.delete()
+                return Response({'detail': 'Item removed from wishlist'})
+            except Wishlist.DoesNotExist:
+                return Response({'detail': 'Item not found in wishlist'}, status=status.HTTP_404_NOT_FOUND)
+            
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)   

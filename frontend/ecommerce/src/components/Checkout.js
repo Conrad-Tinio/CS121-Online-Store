@@ -13,6 +13,7 @@ const Checkout = () => {
     const [completedOrder, setCompletedOrder] = useState(null);
     const [deliveryLocation, setDeliveryLocation] = useState(null);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Get user login information
     const userLogin = useSelector(state => state.userLogin);
@@ -46,6 +47,7 @@ const Checkout = () => {
         }
 
         try {
+            setIsSubmitting(true);
             const config = {
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,12 +72,9 @@ const Checkout = () => {
                 total_price: cartTotal
             };
 
-            // Create the order first
-            const { data: orderResponse } = await axios.post(
-                '/api/orders/create/',
-                orderData,
-                config
-            );
+            const response = await axios.post('/api/orders/create/', orderData, config);
+            setIsSubmitting(false);
+            navigate(`/order/${response.data.id}`);
 
             // Store current cart items and total for display after clearing cart
             const orderDetails = {
@@ -241,7 +240,7 @@ const Checkout = () => {
                                 variant="primary" 
                                 className="w-100 mb-2"
                                 onClick={handleCheckout}
-                                disabled={!deliveryLocation}
+                                disabled={!deliveryLocation || isSubmitting}
                             >
                                 Complete Purchase
                             </Button>
