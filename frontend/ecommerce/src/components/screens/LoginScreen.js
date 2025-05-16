@@ -20,6 +20,7 @@ function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password1, setPassword1] = useState("");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
   const userLogin = useSelector(state => state.userLogin)
@@ -47,14 +48,9 @@ function LoginScreen() {
     dispatch(login(email, password1))
   };
 
-  const showPassword = () => {
-    var x = document.getElementById("password1");
-    if (x.type === "password") {
-      x.type = "text"; 
-    } else {
-      x.type = "password"; 
-    }
-  }
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   return (
     <>
@@ -85,16 +81,18 @@ function LoginScreen() {
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label>
-                      Password</Form.Label>
+                    <Form.Label>Password</Form.Label>
                     <InputGroup className="mb-3">
-                      <InputGroup.Checkbox onChange={showPassword} />{" "}
+                      <InputGroup.Checkbox 
+                        onChange={togglePassword}
+                        checked={showPassword}
+                      />{" "}
                       <Form.Control
                         placeholder="Password"
                         required
                         value={password1}
                         onChange={(e) => setPassword1(e.target.value)}
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         id="password1"
                       />
                     </InputGroup>

@@ -2,6 +2,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.db.models import Sum, Count
+from django.utils import timezone
+from datetime import timedelta
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -12,8 +15,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 
 # from .products import products
-from .models import Products, Category
-from .serializers import ProductsSerializer, UserSerializer, UserSerializerWithToken, CategorySerializer
+from .models import Products, Category, Order, OrderItem, DeliveryLocation
+from .serializers import ProductsSerializer, UserSerializer, UserSerializerWithToken, CategorySerializer, OrderSerializer
 
 # for sending mails and generate token
 from django.template.loader import render_to_string
@@ -187,3 +190,146 @@ def getCategories(request):
     categories = Category.objects.all().order_by('name')
     serializer = CategorySerializer(categories, many=True)
     return Response(serializer.data)   
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_orders(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)   
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_order(request):
+    try:
+        data = request.data
+        user = request.user
+
+        # Get or create delivery location
+        delivery_location = None
+        if data.get('delivery_location'):
+            loc_data = data['delivery_location']
+            delivery_location = DeliveryLocation.objects.create(
+                user=user,
+                latitude=loc_data['latitude'],
+                longitude=loc_data['longitude'],
+                address_details=loc_data['address_details']
+            )
+
+        # Create order
+        order = Order.objects.create(
+            user=user,
+            delivery_location=delivery_location,
+            payment_method=data['payment_method'],
+            shipping_price=data['shipping_price'],
+            total_price=data['total_price'],
+            status='Pending'
+        )
+
+        # Create order items
+        for item in data['order_items']:
+            product = Products.objects.get(_id=item['product_id'])
+            
+            # Check stock
+            if product.stockCount < item['quantity']:
+                order.delete()  # Rollback the order
+                return Response({
+                    'detail': f'Not enough stock for {product.productName}. Available: {product.stockCount}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create order item
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item['quantity'],
+                price=item['price']
+            )
+            
+            # Update stock
+            product.stockCount -= item['quantity']
+            product.save()
+
+        serializer = OrderSerializer(order)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    except KeyError as e:
+        return Response({
+            'detail': f'Missing required field: {str(e)}'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Products.DoesNotExist:
+        return Response({
+            'detail': 'One or more products not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'detail': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)   
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_sales_stats(request):
+    try:
+        # Get time periods
+        today = timezone.now().date()
+        start_of_week = today - timedelta(days=today.weekday())
+        start_of_month = today.replace(day=1)
+
+        # Overall stats
+        total_orders = Order.objects.count()
+        total_sales = Order.objects.aggregate(total=Sum('total_price'))['total'] or 0
+
+        # Today's stats
+        today_orders = Order.objects.filter(created_at__date=today)
+        today_sales = today_orders.aggregate(total=Sum('total_price'))['total'] or 0
+        today_order_count = today_orders.count()
+
+        # This week's stats
+        week_orders = Order.objects.filter(created_at__date__gte=start_of_week)
+        week_sales = week_orders.aggregate(total=Sum('total_price'))['total'] or 0
+        week_order_count = week_orders.count()
+
+        # This month's stats
+        month_orders = Order.objects.filter(created_at__date__gte=start_of_month)
+        month_sales = month_orders.aggregate(total=Sum('total_price'))['total'] or 0
+        month_order_count = month_orders.count()
+
+        # Status breakdown
+        status_breakdown = Order.objects.values('status').annotate(
+            count=Count('id'),
+            total=Sum('total_price')
+        )
+
+        # Best selling products
+        best_sellers = OrderItem.objects.values(
+            'product__productName',
+            'product__price'
+        ).annotate(
+            total_quantity=Sum('quantity'),
+            total_sales=Sum('price')
+        ).order_by('-total_quantity')[:5]
+
+        return Response({
+            'overall': {
+                'total_orders': total_orders,
+                'total_sales': float(total_sales),
+            },
+            'today': {
+                'orders': today_order_count,
+                'sales': float(today_sales),
+            },
+            'week': {
+                'orders': week_order_count,
+                'sales': float(week_sales),
+            },
+            'month': {
+                'orders': month_order_count,
+                'sales': float(month_sales),
+            },
+            'status_breakdown': status_breakdown,
+            'best_sellers': best_sellers
+        })
+
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)   

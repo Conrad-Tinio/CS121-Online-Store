@@ -1,0 +1,73 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block content_title %}
+    <h1>Order Management</h1>
+{% endblock %}
+
+{% block result_list %}
+    <div class="module" style="margin-bottom: 20px;">
+        <div class="dashboard-stats" style="padding: 20px; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="margin-bottom: 15px;">Sales Statistics</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <!-- Today's Stats -->
+                <div class="stat-box" style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <h3 style="margin: 0 0 10px 0; color: #495057;">Today</h3>
+                    <p style="margin: 5px 0;">Orders: {{ today_orders }}</p>
+                    <p style="margin: 5px 0;">Sales: ₱{{ today_sales|floatformat:2 }}</p>
+                </div>
+
+                <!-- This Week's Stats -->
+                <div class="stat-box" style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <h3 style="margin: 0 0 10px 0; color: #495057;">This Week</h3>
+                    <p style="margin: 5px 0;">Orders: {{ week_orders }}</p>
+                    <p style="margin: 5px 0;">Sales: ₱{{ week_sales|floatformat:2 }}</p>
+                </div>
+
+                <!-- This Month's Stats -->
+                <div class="stat-box" style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <h3 style="margin: 0 0 10px 0; color: #495057;">This Month</h3>
+                    <p style="margin: 5px 0;">Orders: {{ month_orders }}</p>
+                    <p style="margin: 5px 0;">Sales: ₱{{ month_sales|floatformat:2 }}</p>
+                </div>
+
+                <!-- Overall Stats -->
+                <div class="stat-box" style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <h3 style="margin: 0 0 10px 0; color: #495057;">Overall</h3>
+                    <p style="margin: 5px 0;">Total Orders: {{ total_orders }}</p>
+                    <p style="margin: 5px 0;">Total Sales: ₱{{ total_sales|floatformat:2 }}</p>
+                </div>
+            </div>
+
+            <!-- Status Breakdown -->
+            <div style="margin-top: 20px;">
+                <h3 style="margin: 0 0 10px 0; color: #495057;">Order Status Breakdown</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    {% for status in status_breakdown %}
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <p style="margin: 5px 0; font-weight: bold;">{{ status.status }}</p>
+                        <p style="margin: 5px 0;">Count: {{ status.count }}</p>
+                        <p style="margin: 5px 0;">Total: ₱{{ status.total|floatformat:2 }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Best Selling Products -->
+            <div style="margin-top: 20px;">
+                <h3 style="margin: 0 0 10px 0; color: #495057;">Best Selling Products</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    {% for product in best_sellers %}
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <p style="margin: 5px 0; font-weight: bold;">{{ product.product__productName }}</p>
+                        <p style="margin: 5px 0;">Quantity Sold: {{ product.total_quantity }}</p>
+                        <p style="margin: 5px 0;">Total Sales: ₱{{ product.total_sales|floatformat:2 }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ block.super }}
+{% endblock %} 

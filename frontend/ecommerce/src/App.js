@@ -8,6 +8,9 @@ import SignupScreen from "./components/screens/SignupScreen";
 import LoginScreen from "./components/screens/LoginScreen";
 import CartScreen from "./components/screens/CartScreen";
 import ProductScreen from "./components/screens/ProductScreen";
+import UserAccountScreen from "./components/screens/UserAccountScreen";
+import AdminDashboard from "./components/screens/AdminDashboard";
+import PrivateRoute from "./components/PrivateRoute";
 import Checkout from "./components/Checkout";
 import Notification from "./components/Notification";
 import { useDispatch, useSelector } from "react-redux";
@@ -61,6 +64,22 @@ const AppContent = () => {
         <Route path="/signup" element={<SignupScreen />} />
         <Route path="/cart/:id?" element={<CartScreen />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route 
+          path="/account" 
+          element={
+            <PrivateRoute>
+              <UserAccountScreen />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          } 
+        />
       </Routes>
     
       <Footer />

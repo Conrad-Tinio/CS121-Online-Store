@@ -46,20 +46,43 @@ const Checkout = () => {
         }
 
         try {
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${userInfo.token}`
+                }
+            };
+
+            // Create the order
+            const orderData = {
+                order_items: cartItems.map(item => ({
+                    product_id: item.product,
+                    quantity: item.qty,
+                    price: item.price
+                })),
+                delivery_location: {
+                    latitude: deliveryLocation.position[0],
+                    longitude: deliveryLocation.position[1],
+                    address_details: deliveryLocation.address
+                },
+                payment_method: 'Cash on Delivery', // You can make this dynamic if needed
+                shipping_price: 0, // You can calculate this based on location
+                total_price: cartTotal
+            };
+
+            // Create the order first
+            const { data: orderResponse } = await axios.post(
+                '/api/orders/create/',
+                orderData,
+                config
+            );
+
             // Store current cart items and total for display after clearing cart
             const orderDetails = {
                 items: [...cartItems],
                 total: cartTotal,
                 deliveryLocation
             };
-
-            // Update stock in backend
-            await Promise.all(cartItems.map(item => 
-                axios.post('/api/products/update-stock/', {
-                    productId: item.product,
-                    quantity: item.qty
-                })
-            ));
 
             // Save order details before clearing cart
             setCompletedOrder(orderDetails);
@@ -71,7 +94,7 @@ const Checkout = () => {
 
         } catch (error) {
             console.error('Error during checkout:', error);
-            alert('There was an error processing your checkout. Please try again.');
+            alert(error.response?.data?.detail || 'There was an error processing your checkout. Please try again.');
         }
     };
 

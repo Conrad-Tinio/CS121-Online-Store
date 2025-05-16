@@ -169,6 +169,14 @@ function Header() {
                   </a>
 
                   <div className="dropdown-menu">
+                    <NavLink to="/account" className="dropdown-item" onClick={handleNavigation}>
+                      My Account
+                    </NavLink>
+                    {userInfo.isAdmin && (
+                      <NavLink to="/admin/dashboard" className="dropdown-item" onClick={handleNavigation}>
+                        Dashboard
+                      </NavLink>
+                    )}
                     <NavLink className="dropdown-item" onClick={logoutHandler}>
                       Logout
                     </NavLink>

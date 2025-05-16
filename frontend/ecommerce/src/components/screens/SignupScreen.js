@@ -23,7 +23,8 @@ function SignupScreen() {
   const [password1, setPassword1] = useState("");
   const [password2, setPassword2] = useState("");
   const [message, setMessage] = useState("");
-  const [show, changeshow] = useState("");
+  const [showPassword1, setShowPassword1] = useState(false);
+  const [showPassword2, setShowPassword2] = useState(false);
   const dispatch = useDispatch();
   const location = useLocation();
   const redirect = location.search ? location.search.split("=")[1] : "/"
@@ -72,17 +73,14 @@ function SignupScreen() {
       setPassword2("")
     }
   };
-  const showPassword = () => {
-    var x = document.getElementById("password1");
-    var z = document.getElementById("password2");
-    if (x.type === "password" && z.type === "password") {
-      x.type = "text"; 
-      z.type = "text";
-    } else {
-      x.type = "password"; 
-      z.type = "password";
-    }
-  }
+
+  const togglePassword1 = () => {
+    setShowPassword1(!showPassword1);
+  };
+
+  const togglePassword2 = () => {
+    setShowPassword2(!showPassword2);
+  };
 
   return (
     <>
@@ -131,16 +129,18 @@ function SignupScreen() {
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label>
-                      Password</Form.Label>
+                    <Form.Label>Password</Form.Label>
                     <InputGroup className="mb-3">
-                      <InputGroup.Checkbox onChange={showPassword} />{" "}
+                      <InputGroup.Checkbox 
+                        onChange={togglePassword1}
+                        checked={showPassword1}
+                      />{" "}
                       <Form.Control
                         placeholder="Password"
                         required
                         value={password1}
                         onChange={(e) => setPassword1(e.target.value)}
-                        type="password"
+                        type={showPassword1 ? "text" : "password"}
                         id="password1"
                       />
                     </InputGroup>
@@ -149,13 +149,16 @@ function SignupScreen() {
                   <Form.Group className="mb-3">
                     <Form.Label>Confirm Password</Form.Label>
                     <InputGroup className="mb-3">
-                      <InputGroup.Checkbox/>{" "}
+                      <InputGroup.Checkbox
+                        onChange={togglePassword2}
+                        checked={showPassword2}
+                      />{" "}
                       <Form.Control
                         placeholder="Confirm Password"
                         required
                         value={password2}
                         onChange={(e) => setPassword2(e.target.value)}
-                        type="password"
+                        type={showPassword2 ? "text" : "password"}
                         id="password2"
                       />
                     </InputGroup>
