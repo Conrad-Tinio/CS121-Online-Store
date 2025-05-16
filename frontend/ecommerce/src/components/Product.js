@@ -1,9 +1,20 @@
 import React from 'react'
-import { Card } from 'react-bootstrap'
+import { Card, Badge } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import Rating from './Rating'
 
 function Product({product}) {
+  const getArrivalBadge = (status) => {
+    switch (status) {
+      case 'new':
+        return <Badge bg="success">🆕 New Arrival</Badge>
+      case 'recent':
+        return <Badge bg="info">📅 Recent</Badge>
+      default:
+        return <Badge bg="dark">⭐ Classic</Badge>
+    }
+  }
+
   return (
     <Card className='my-3 p-3 rounded'>
         <Link to={`/product/${product._id}`}>
@@ -11,11 +22,17 @@ function Product({product}) {
         </Link>
 
         <Card.Body>
-            <Link to={`/product/${product._id}`} className='text-dark'>
-                <Card.Title as="h3">
+            <Link to={`/product/${product._id}`} style={{ textDecoration: 'none' }}>
+                <Card.Title as="div">
                     <strong>{product.productName}</strong>
                 </Card.Title>
             </Link>
+
+            <Card.Text as="div">
+                <div className="my-2">
+                    {getArrivalBadge(product.arrival_status)}
+                </div>
+            </Card.Text>
 
             <Card.Text as="div">
                 <div className="my-3">
@@ -23,7 +40,7 @@ function Product({product}) {
                 </div>
             </Card.Text>
 
-            <Card.Text as="h4">
+            <Card.Text as="h3">
                 ₱{product.price}
             </Card.Text>
 

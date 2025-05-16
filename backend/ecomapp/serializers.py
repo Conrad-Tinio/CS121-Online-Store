@@ -14,7 +14,8 @@ class ProductsSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Products
-        fields = '__all__'
+        fields = ['_id', 'user', 'productName', 'category', 'image', 'productBrand', 'arrival_status',
+                 'productInfo', 'rating', 'numReviews', 'price', 'stockCount', 'createdAt', 'tags']
 
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField(read_only=True)

@@ -4,6 +4,7 @@ import { Navbar, Container, Form, Button, Modal, Badge } from "react-bootstrap";
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from "../actions/userActions";
 import axios from 'axios';
+import { Link } from "react-router-dom";
 
 function Header() {
   const navigate = useNavigate();
@@ -18,25 +19,15 @@ function Header() {
   const [showFilter, setShowFilter] = useState(false);
   const [expanded, setExpanded] = useState(false);
   
-  // New state for tags
-  const [activeTags, setActiveTags] = useState({
-    stock: searchParams.get('stock') || '',
-    price_range: searchParams.get('price_range') || '',
-  });
+  // New state for arrival status
+  const [arrivalStatus, setArrivalStatus] = useState(searchParams.get('arrival') || '');
 
-  // Tag definitions with exact price ranges
-  const tagOptions = {
-    stock: [
-      { value: 'inStock', text: 'In Stock', variant: 'success', icon: '✓' },
-      { value: 'lowStock', text: 'Low Stock', variant: 'warning', icon: '!' },
-      { value: 'outOfStock', text: 'Out of Stock', variant: 'danger', icon: '×' },
-    ],
-    price_range: [
-      { value: 'budget', text: 'Budget (< ₱1,000)', variant: 'info', icon: '₱' },
-      { value: 'midRange', text: 'Mid-Range (₱1,000 - ₱4,999)', variant: 'primary', icon: '₱₱' },
-      { value: 'premium', text: 'Premium (₱5,000+)', variant: 'dark', icon: '₱₱₱' },
-    ],
-  };
+  // Arrival status options
+  const arrivalOptions = [
+    { value: 'new', text: 'New Arrivals', variant: 'success', icon: '🆕' },
+    { value: 'recent', text: 'Recent', variant: 'info', icon: '📅' },
+    { value: 'classic', text: 'Classic', variant: 'dark', icon: '⭐' },
+  ];
 
   const userLogin = useSelector(state => state.userLogin);
   const {userInfo} = userLogin;
@@ -46,10 +37,7 @@ function Header() {
     const params = new URLSearchParams(location.search);
     setKeyword(params.get('keyword') || '');
     setCategory(params.get('category') || '');
-    setActiveTags({
-      stock: params.get('stock') || '',
-      price_range: params.get('price_range') || '',
-    });
+    setArrivalStatus(params.get('arrival') || '');
   }, [location.search]);
 
   useEffect(() => {
@@ -68,16 +56,16 @@ function Header() {
   // Handle category change
   const handleCategoryChange = (newCategory = '') => {
     console.log('Category changed to:', newCategory);
+    setCategory(newCategory);
     
     // Create a new URLSearchParams object
     const params = new URLSearchParams(location.search);
     
-    // Clear existing category
-    params.delete('category');
-    
-    // Add new category if one is selected
+    // Update category
     if (newCategory) {
       params.set('category', newCategory);
+    } else {
+      params.delete('category');
     }
     
     // Keep other existing filters
@@ -88,90 +76,62 @@ function Header() {
       pathname: '/',
       search: searchQuery ? `?${searchQuery}` : ''
     });
-    
-    // Close the filter popup and navbar
-    setShowFilter(false);
-    setExpanded(false);
   };
 
-  // Handle tag click with debug logging
-  const handleTagClick = (type, value) => {
-    console.log('Tag clicked:', type, value);
-    console.log('Current active tags:', activeTags);
-    
-    // Toggle the clicked tag while preserving other tag types
-    const newActiveTags = {
-      ...activeTags,
-      [type]: activeTags[type] === value ? '' : value
-    };
-    console.log('New active tags:', newActiveTags);
-    setActiveTags(newActiveTags);
+  // Handle arrival status click - only update local state, don't navigate
+  const handleArrivalClick = (value) => {
+    console.log('Arrival status clicked:', value);
+    // Toggle the arrival status
+    const newStatus = value === arrivalStatus ? '' : value;
+    console.log('Setting new arrival status:', newStatus);
+    setArrivalStatus(newStatus);
   };
 
   const submitHandler = (e) => {
     e.preventDefault();
-    console.log('\nSubmitting filters...');
+    console.log('\nSubmitting filters from Header:');
     console.log('Current state:', {
-      category,
       keyword,
-      activeTags
+      category,
+      arrivalStatus
     });
     
     // Create a new URLSearchParams object
     const params = new URLSearchParams();
     
-    // Add all parameters if they exist
+    // Update parameters
     if (keyword.trim()) {
-      console.log('Adding keyword:', keyword);
       params.set('keyword', keyword);
     }
     
     if (category) {
-      console.log('Adding category:', category);
       params.set('category', category);
     }
     
-    // Handle price range tag first
-    if (activeTags.price_range) {
-      console.log('Adding price range tag:', activeTags.price_range);
-      params.set('price_range', activeTags.price_range);
-    }
-    
-    // Handle stock tag
-    if (activeTags.stock) {
-      console.log('Adding stock tag:', activeTags.stock);
-      params.set('stock', activeTags.stock);
+    if (arrivalStatus) {
+      params.set('arrival', arrivalStatus);
+      console.log('Setting arrival status:', arrivalStatus);
     }
 
     const searchQuery = params.toString();
     console.log('Final URL params:', searchQuery);
     
-    // Log the expected filters that should be applied
-    console.log('\nExpected filtering:');
-    if (category) console.log(`- Category should be: ${category}`);
-    if (activeTags.stock) console.log(`- Stock should be: ${activeTags.stock}`);
-    if (activeTags.price_range) {
-      const priceTag = tagOptions.price_range.find(t => t.value === activeTags.price_range);
-      console.log(`- Price should be: ${priceTag.text}`);
-    }
-    
-    // Navigate without hash
+    // Navigate with the new search params
     navigate({
       pathname: '/',
-      search: `?${searchQuery}`
-    }, { replace: true });
+      search: searchQuery ? `?${searchQuery}` : ''
+    });
     
+    // Close modals
     setShowFilter(false);
     setExpanded(false);
   };
 
   const clearFilters = () => {
+    console.log('Clearing all filters');
     setKeyword('');
     setCategory('');
-    setActiveTags({
-      stock: '',
-      price_range: '',
-    });
+    setArrivalStatus('');
     navigate('/', { replace: true });
     setShowFilter(false);
   };
@@ -186,8 +146,7 @@ function Header() {
     return Boolean(
       keyword ||
       category ||
-      activeTags.stock ||
-      activeTags.price_range
+      arrivalStatus
     );
   };
 
@@ -196,8 +155,7 @@ function Header() {
     let count = 0;
     if (keyword) count++;
     if (category) count++;
-    if (activeTags.stock) count++;
-    if (activeTags.price_range) count++;
+    if (arrivalStatus) count++;
     return count;
   };
 
@@ -207,62 +165,32 @@ function Header() {
     if (keyword) filters.push(`Search: "${keyword}"`);
     if (category) filters.push(`Category: ${category}`);
     
-    if (activeTags.stock) {
-      const stockTag = tagOptions.stock.find(t => t.value === activeTags.stock);
-      filters.push(`Stock: ${stockTag.text}`);
-    }
-    if (activeTags.price_range) {
-      const priceTag = tagOptions.price_range.find(t => t.value === activeTags.price_range);
-      filters.push(`Price Range: ${priceTag.text}`);
+    if (arrivalStatus) {
+      const arrivalOption = arrivalOptions.find(opt => opt.value === arrivalStatus);
+      filters.push(`Arrival: ${arrivalOption.text}`);
     }
     return filters;
   };
 
-  // Update the category dropdown menu
-  const renderCategoryMenu = () => (
-    <div className="dropdown-menu">
-      <button
-        type="button"
-        className={`dropdown-item ${!category ? 'active' : ''}`}
-        onClick={() => handleCategoryChange()}
-      >
-        All Products
-      </button>
-      {categories.map(cat => (
-        <button
-          key={cat._id}
-          type="button"
-          className={`dropdown-item ${category === cat.name ? 'active' : ''}`}
-          onClick={() => handleCategoryChange(cat.name)}
-        >
-          {cat.name}
-        </button>
-      ))}
-    </div>
-  );
-
-  // Update the filter modal tag rendering
-  const renderFilterTags = (type, options) => (
+  // Render arrival status options
+  const renderArrivalOptions = () => (
     <div className="d-flex flex-wrap gap-2">
-      {options.map(tag => (
+      {arrivalOptions.map(option => (
         <button
-          key={tag.value}
+          key={option.value}
           type="button"
-          className={`badge bg-${activeTags[type] === tag.value ? tag.variant : 'secondary'}`}
+          className={`badge bg-${arrivalStatus === option.value ? option.variant : 'secondary'}`}
           style={{
             cursor: 'pointer',
-            opacity: activeTags[type] === tag.value ? 1 : 0.7,
+            opacity: arrivalStatus === option.value ? 1 : 0.7,
             padding: '8px 12px',
             fontSize: '0.9rem',
             border: 'none',
           }}
-          onClick={() => {
-            console.log(`Clicking ${type} tag:`, tag.value);
-            handleTagClick(type, tag.value);
-          }}
+          onClick={() => handleArrivalClick(option.value)}
         >
-          <span className="me-1">{tag.icon}</span>
-          {tag.text}
+          <span className="me-1">{option.icon}</span>
+          {option.text}
         </button>
       ))}
     </div>
@@ -330,7 +258,25 @@ function Header() {
                   Categories
                 </button>
 
-                {renderCategoryMenu()}
+                <div className="dropdown-menu">
+                  <button
+                    type="button"
+                    className={`dropdown-item ${!category ? 'active' : ''}`}
+                    onClick={() => handleCategoryChange()}
+                  >
+                    All Products
+                  </button>
+                  {categories.map(cat => (
+                    <button
+                      key={cat._id}
+                      type="button"
+                      className={`dropdown-item ${category === cat.name ? 'active' : ''}`}
+                      onClick={() => handleCategoryChange(cat.name)}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
               </li>
 
               <li className="nav-item">
@@ -503,7 +449,7 @@ function Header() {
             </div>
           )}
 
-          <Form>
+          <Form onSubmit={submitHandler}>
             <Form.Group className="mb-3">
               <Form.Label>Category</Form.Label>
               <Form.Select 
@@ -522,30 +468,38 @@ function Header() {
               </Form.Select>
             </Form.Group>
 
-            {/* Stock Status Filter */}
+            {/* Arrival Status Filter */}
             <Form.Group className="mb-3">
-              <Form.Label>Stock Status</Form.Label>
-              {renderFilterTags('stock', tagOptions.stock)}
+              <Form.Label>Arrival Status</Form.Label>
+              <div className="d-flex flex-wrap gap-2">
+                {arrivalOptions.map(option => (
+                  <Button
+                    key={option.value}
+                    variant={arrivalStatus === option.value ? option.variant : 'outline-secondary'}
+                    className="d-flex align-items-center"
+                    onClick={() => handleArrivalClick(option.value)}
+                    type="button"
+                  >
+                    <span className="me-1">{option.icon}</span>
+                    {option.text}
+                  </Button>
+                ))}
+              </div>
             </Form.Group>
 
-            {/* Price Range Tags */}
-            <Form.Group className="mb-3">
-              <Form.Label>Price Category</Form.Label>
-              {renderFilterTags('price_range', tagOptions.price_range)}
-            </Form.Group>
+            <div className="d-flex justify-content-end gap-2 mt-4">
+              <Button variant="secondary" onClick={() => setShowFilter(false)}>
+                Close
+              </Button>
+              <Button variant="danger" onClick={clearFilters}>
+                Clear All Filters
+              </Button>
+              <Button variant="primary" onClick={submitHandler}>
+                Apply Filters
+              </Button>
+            </div>
           </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowFilter(false)}>
-            Close
-          </Button>
-          <Button variant="danger" onClick={clearFilters}>
-            Clear All Filters
-          </Button>
-          <Button variant="primary" onClick={submitHandler}>
-            Apply Filters
-          </Button>
-        </Modal.Footer>
       </Modal>
     </>
   );

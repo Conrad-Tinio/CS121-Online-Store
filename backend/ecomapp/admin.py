@@ -13,8 +13,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Products)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['productName', 'category', 'price', 'stockCount', 'rating']
-    list_filter = ['category', 'createdAt']
+    list_display = ['productName', 'category', 'price', 'stockCount', 'rating', 'arrival_status']
+    list_filter = ['category', 'createdAt', 'arrival_status']
     search_fields = ['productName', 'description']
     ordering = ['productName']
 

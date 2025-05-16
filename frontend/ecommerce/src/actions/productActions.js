@@ -8,7 +8,7 @@ import {
   PRODUCT_DETAILS_FAIL
 } from "../constants/productConstants";
 
-export const listProducts = (keyword = '', category = '', price_range = '', stock = '') => async (dispatch) => {
+export const listProducts = (keyword = '', category = '', arrival = '') => async (dispatch) => {
   try {
     dispatch({ type: PRODUCT_LIST_REQUEST });
 
@@ -16,29 +16,34 @@ export const listProducts = (keyword = '', category = '', price_range = '', stoc
     const params = new URLSearchParams();
     if (keyword) params.append('keyword', keyword);
     if (category) params.append('category', category);
-    if (price_range) params.append('price_range', price_range);
-    if (stock) params.append('stock', stock);
+    if (arrival) params.append('arrival', arrival);
     
     const queryString = params.toString();
     const url = `/api/products/${queryString ? `?${queryString}` : ''}`;
     
-    console.log('Fetching products with URL:', url);
-    console.log('Price range filter:', price_range);
-    console.log('Stock filter:', stock);
-
+    console.log('\nProduct Action - Making API request:');
+    console.log('Parameters received:', { keyword, category, arrival });
+    console.log('URL being called:', url);
+    
     const { data } = await axios.get(url);
-
+    
+    console.log('\nProduct Action - Received API response:');
+    console.log('Total products:', data.length);
+    data.forEach(product => {
+      console.log(`- ${product.productName}: arrival_status='${product.arrival_status}'`);
+    });
+    
     dispatch({
       type: PRODUCT_LIST_SUCCESS,
       payload: data,
     });
-    
   } catch (error) {
+    console.error('Error in listProducts action:', error);
     dispatch({
       type: PRODUCT_LIST_FAIL,
       payload:
-        error.response && error.response.data.detail
-          ? error.response.data.detail
+        error.response && error.response.data.message
+          ? error.response.data.message
           : error.message,
     });
   }

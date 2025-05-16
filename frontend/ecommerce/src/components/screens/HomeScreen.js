@@ -22,13 +22,16 @@ function HomeScreen() {
     useEffect(() => {
         const keyword = searchParams.get('keyword') || ''
         const category = searchParams.get('category') || ''
-        const price_range = searchParams.get('price_range') || ''
-        const stock = searchParams.get('stock') || ''
+        const arrival = searchParams.get('arrival') || ''
         
-        console.log('Current price range:', price_range)
-        console.log('Current stock filter:', stock)
-        dispatch(listProducts(keyword, category, price_range, stock))
-    }, [dispatch, location.search]) // searchParams is derived from location.search, so we don't need it in deps
+        console.log('Current filters:', {
+            keyword,
+            category,
+            arrival
+        })
+        
+        dispatch(listProducts(keyword, category, arrival))
+    }, [dispatch, location.search])
 
     return (
         <Container className="py-3">

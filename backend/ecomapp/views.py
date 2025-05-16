@@ -46,153 +46,55 @@ def getRoutes(request):
 
 @api_view(['GET'])
 def getProducts(request):
-    query = request.query_params.get('keyword', '')
-    category = request.query_params.get('category', '')
-    stock_filter = request.query_params.get('stock', '')
-    price_range = request.query_params.get('price_range', '')
+    # Print raw request data for debugging
+    print("\nDEBUG - Raw request data:")
+    print("URL:", request.build_absolute_uri())
+    print("Query params:", dict(request.GET))
+    print("Headers:", dict(request.headers))
+    
+    query = request.GET.get('keyword', '')
+    category = request.GET.get('category', '')
+    arrival_status = request.GET.get('arrival', '')
     
     print(f"\n{'='*50}")
     print("Processing product filter request")
     print(f"{'='*50}")
     print("\nReceived filter parameters:")
-    print(f"- Category: {category}")
-    print(f"- Stock filter: {stock_filter}")
-    print(f"- Price range: {price_range}")
-    print(f"- Search query: {query}")
+    print(f"- Category: '{category}'")
+    print(f"- Arrival status: '{arrival_status}'")
+    print(f"- Search query: '{query}'")
     
     # Start with all products
     products = Products.objects.all()
-    initial_count = products.count()
-    print(f"\nInitial product count: {initial_count}")
+    print("\nInitial product count:", products.count())
     
-    # Print all products and their details before filtering
-    print("\nAll products before filtering:")
-    for p in products:
-        print(f"- {p.productName}: Price=₱{p.price}, Stock={p.stockCount}")
-    
-    # Define exact price ranges with Decimal for precise comparison
-    PRICE_RANGES = {
-        'budget': (Decimal('0.00'), Decimal('999.99')),
-        'midRange': (Decimal('1000.00'), Decimal('4999.99')),
-        'premium': (Decimal('5000.00'), Decimal('999999.99'))
-    }
-    
-    # Define stock ranges with exact boundaries
-    STOCK_RANGES = {
-        'inStock': Q(stockCount__gt=10),
-        'lowStock': Q(stockCount__gt=0) & Q(stockCount__lte=10),
-        'outOfStock': Q(stockCount=0)
-    }
-    
-    # Initialize filters list
-    filters = []
+    # Add arrival status filter first
+    if arrival_status:
+        print(f"\nApplying arrival status filter: '{arrival_status}'")
+        products = products.filter(arrival_status__exact=arrival_status)
+        print(f"Product count after arrival filter: {products.count()}")
+        print("Filtered products:")
+        for p in products:
+            print(f"- {p.productName} (arrival_status='{p.arrival_status}')")
     
     # Add category filter
     if category:
-        cat_filter = Q(category__name__iexact=category)
-        filters.append(cat_filter)
-        print(f"\nAdding category filter: {category}")
-    
-    # Add stock filter
-    if stock_filter and stock_filter in STOCK_RANGES:
-        stock_q = STOCK_RANGES[stock_filter]
-        filters.append(stock_q)
-        print(f"\nAdding stock filter: {stock_filter}")
-        print(f"Stock condition: {stock_q}")
-    
-    # Add price range filter
-    if price_range and price_range in PRICE_RANGES:
-        min_val, max_val = PRICE_RANGES[price_range]
-        price_q = Q(price__gte=min_val) & Q(price__lt=max_val)
-        filters.append(price_q)
-        print(f"\nAdding price range filter: {price_range}")
-        print(f"Price range: ₱{min_val} <= price < ₱{max_val}")
-        print(f"SQL query part: {price_q}")
+        print(f"\nApplying category filter: '{category}'")
+        products = products.filter(category__name__iexact=category)
+        print(f"Product count after category filter: {products.count()}")
     
     # Add search query filter
     if query:
-        query_q = Q(productName__icontains=query)
-        filters.append(query_q)
-        print(f"\nAdding search filter: {query}")
-    
-    # Apply all filters using AND operation
-    if filters:
-        # Combine all filters with AND
-        final_filter = filters.pop(0)
-        for f in filters:
-            final_filter &= f
-        print(f"\nApplying combined filters: {final_filter}")
-        products = products.filter(final_filter)
-    
-    # Verify each product meets ALL criteria
-    print("\nVerifying filtered products:")
-    products_to_remove = []
-    
-    for p in products:
-        print(f"\nChecking product: {p.productName}")
-        print(f"- Price: ₱{p.price}")
-        print(f"- Stock: {p.stockCount}")
-        
-        meets_all_criteria = True
-        
-        # Verify category
-        if category:
-            meets_category = p.category.name.lower() == category.lower()
-            print(f"Category check:")
-            print(f"- Required: {category}")
-            print(f"- Actual: {p.category.name}")
-            print(f"- Matches: {meets_category}")
-            meets_all_criteria &= meets_category
-        
-        # Verify stock status
-        if stock_filter:
-            if stock_filter == 'inStock':
-                meets_stock = p.stockCount > 10
-            elif stock_filter == 'lowStock':
-                meets_stock = 0 < p.stockCount <= 10
-            else:  # outOfStock
-                meets_stock = p.stockCount == 0
-            print(f"Stock check ({stock_filter}):")
-            print(f"- Required: {stock_filter}")
-            print(f"- Actual: {p.stockCount}")
-            print(f"- Matches: {meets_stock}")
-            meets_all_criteria &= meets_stock
-            
-        # Verify price range
-        if price_range and price_range in PRICE_RANGES:
-            min_val, max_val = PRICE_RANGES[price_range]
-            meets_price = min_val <= p.price < max_val
-            print(f"Price range check ({price_range}):")
-            print(f"- Required: ₱{min_val} <= price < ₱{max_val}")
-            print(f"- Actual: ₱{p.price}")
-            print(f"- Matches: {meets_price}")
-            meets_all_criteria &= meets_price
-        
-        if not meets_all_criteria:
-            print("❌ Product does not meet all criteria - will be removed")
-            products_to_remove.append(p.id)
-        else:
-            print("✓ Product meets all criteria")
-    
-    # Remove products that don't meet all criteria
-    if products_to_remove:
-        products = products.exclude(id__in=products_to_remove)
+        print(f"\nApplying search filter: '{query}'")
+        products = products.filter(productName__icontains=query)
+        print(f"Product count after search filter: {products.count()}")
     
     # Order by name
     products = products.order_by('productName')
     
     serializer = ProductsSerializer(products, many=True)
-    final_count = len(serializer.data)
-    print(f"\nFinal product count: {final_count}")
+    print(f"\nFinal product count: {len(serializer.data)}")
     
-    if final_count > 0:
-        print("\nFinal products:")
-        for p in products:
-            print(f"- {p.productName}: Price=₱{p.price}, Stock={p.stockCount}")
-    else:
-        print("\nNo products match all filters")
-    
-    print(f"\n{'='*50}")
     return Response(serializer.data)
 
 

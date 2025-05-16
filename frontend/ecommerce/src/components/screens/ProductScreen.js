@@ -34,23 +34,22 @@ function ProductScreen({ params }) {
   const { wishlistItems, loading: wishlistLoading, error: wishlistError } = wishlist;
 
   const handleTagClick = (filterType, value) => {
-    console.log('Applying filter:', filterType, value); // Debug log
-    // Preserve any existing search parameters
+    console.log('Applying filter:', filterType, value);
     const searchParams = new URLSearchParams(window.location.search);
-    
-    // Clear any existing stock and price_range filters first
-    searchParams.delete('stock');
-    searchParams.delete('price_range');
-    
-    // Add the new filter
     searchParams.set(filterType, value);
-    
-    // Log the final URL for debugging
     const finalUrl = `/?${searchParams.toString()}`;
-    console.log('Navigating to:', finalUrl);
-    
-    // Navigate with the updated filters
     navigate(finalUrl);
+  };
+
+  const getArrivalTag = (arrivalStatus) => {
+    switch (arrivalStatus) {
+      case 'new':
+        return { text: 'New Arrivals', variant: 'success', icon: '🆕' };
+      case 'recent':
+        return { text: 'Recent', variant: 'info', icon: '📅' };
+      default:
+        return { text: 'Classic', variant: 'dark', icon: '⭐' };
+    }
   };
 
   // Check if product is in wishlist
@@ -59,26 +58,6 @@ function ProductScreen({ params }) {
     const currentId = String(id);
     return itemId === currentId;
   });
-
-  const getStockStatusTag = (stockCount) => {
-    if (stockCount > 10) {
-      return { text: 'In Stock', variant: 'success', icon: '✓', filter: 'stock=inStock' };
-    } else if (stockCount > 0) {
-      return { text: 'Low Stock', variant: 'warning', icon: '!', filter: 'stock=lowStock' };
-    } else {
-      return { text: 'Out of Stock', variant: 'danger', icon: '×', filter: 'stock=outOfStock' };
-    }
-  };
-
-  const getPriceTag = (price) => {
-    if (price < 1000) {
-      return { text: 'Budget', variant: 'info', icon: '₱', filter: 'budget' };
-    } else if (price < 5000) {
-      return { text: 'Mid-Range', variant: 'primary', icon: '₱₱', filter: 'midRange' };
-    } else {
-      return { text: 'Premium', variant: 'dark', icon: '₱₱₱', filter: 'premium' };
-    }
-  };
 
   useEffect(() => {
     console.log('Current product ID:', id);
@@ -188,13 +167,13 @@ function ProductScreen({ params }) {
                     <ListGroup.Item>
                       <h3 className="mb-3">{product.productName}</h3>
                       <div className="d-flex flex-wrap gap-2" style={{ margin: '-2px' }}>
-                        {/* Stock Status Tag */}
+                        {/* Arrival Status Tag */}
                         {(() => {
-                          const stockStatus = getStockStatusTag(product.stockCount);
+                          const arrivalTag = getArrivalTag(product.arrival_status);
                           return (
                             <span 
-                              onClick={() => handleTagClick('stock', stockStatus.filter.split('=')[1])}
-                              className={`badge bg-${stockStatus.variant} d-flex align-items-center`}
+                              onClick={() => handleTagClick('arrival', product.arrival_status)}
+                              className={`badge bg-${arrivalTag.variant} d-flex align-items-center`}
                               style={{ 
                                 padding: '8px 12px', 
                                 fontSize: '0.9rem',
@@ -205,31 +184,8 @@ function ProductScreen({ params }) {
                               onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
                               onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
                             >
-                              <span className="me-1">{stockStatus.icon}</span>
-                              {stockStatus.text}
-                            </span>
-                          );
-                        })()}
-                        
-                        {/* Price Range Tag */}
-                        {(() => {
-                          const priceTag = getPriceTag(product.price);
-                          return (
-                            <span 
-                              onClick={() => handleTagClick('price_range', priceTag.filter)}
-                              className={`badge bg-${priceTag.variant} d-flex align-items-center`}
-                              style={{ 
-                                padding: '8px 12px', 
-                                fontSize: '0.9rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                opacity: 0.9
-                              }}
-                              onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                              onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
-                            >
-                              <span className="me-1">{priceTag.icon}</span>
-                              {priceTag.text}
+                              <span className="me-1">{arrivalTag.icon}</span>
+                              {arrivalTag.text}
                             </span>
                           );
                         })()}
