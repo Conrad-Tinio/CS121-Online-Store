@@ -19,7 +19,8 @@ function Product({product}) {
               className="me-1"
               style={{
                 padding: '0.4rem 0.8rem',
-                fontSize: '0.85rem'
+                fontSize: '0.75rem',
+                fontWeight: '500'
               }}
             >
               {tag.tag_type}: {tag.name}
@@ -31,41 +32,75 @@ function Product({product}) {
   }
 
   return (
-    <Card className='my-3 p-3 rounded'>
-        <Link to={`/product/${product._id}`}>
-            <Card.Img src={product.image} />
-        </Link>
+    <Card className="h-100 product-card">
+      <style>
+        {`
+          .product-card {
+            transition: all 0.3s ease !important;
+            border: 1px solid #e0e0e0 !important;
+          }
+          .product-card:hover {
+            transform: translateY(-8px) !important;
+            border-color: #28a745 !important;
+            box-shadow: 0 8px 16px rgba(40, 167, 69, 0.2) !important;
+          }
+          .product-card:hover .product-title {
+            color: #28a745 !important;
+          }
+          .product-card:hover .btn-primary {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
+          }
+        `}
+      </style>
+      <Link to={`/product/${product._id}`} className="text-decoration-none">
+        <div className="position-relative">
+          <Card.Img 
+            src={product.image} 
+            className="card-img-top"
+            alt={product.productName}
+          />
+          {product.stockCount === 0 && (
+            <Badge 
+              bg="danger" 
+              className="position-absolute top-0 end-0 m-2"
+            >
+              Out of Stock
+            </Badge>
+          )}
+        </div>
 
-        <Card.Body>
-            <Link to={`/product/${product._id}`} style={{ textDecoration: 'none' }}>
-                <Card.Title as="div">
-                    <strong>{product.productName}</strong>
-                </Card.Title>
-            </Link>
+        <Card.Body className="d-flex flex-column">
+          <Card.Title as="h3" className="product-title">
+            {product.productName}
+          </Card.Title>
 
-            <Card.Text as="div">
-                {renderTags(product.tags)}
-            </Card.Text>
+          {renderTags(product.tags)}
 
-            <Card.Text as="div">
-                <div className="my-3">
-                    {product.rating} from {product.numReviews} reviews
-                </div>
-            </Card.Text>
+          <div className="mt-auto">
+            <div className="d-flex align-items-center mb-2">
+              <Rating 
+                value={product.rating}
+                text={`${product.numReviews} reviews`}
+                color={"#f8e825"}
+              />
+            </div>
 
-            <Card.Text as="h3">
-                ₱{product.price}
-            </Card.Text>
-
-            <Card.Text>
-                <Rating 
-                    value={product.rating}
-                    text={` ${product.numReviews} reviews`}
-                    color={"#f8e825"}
-                />
-            </Card.Text>
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="price">£{product.price}</span>
+              {product.stockCount > 0 ? (
+                <Badge bg="success" className="stock-badge">
+                  In Stock
+                </Badge>
+              ) : (
+                <Badge bg="secondary" className="stock-badge">
+                  Coming Soon
+                </Badge>
+              )}
+            </div>
+          </div>
         </Card.Body>
-            
+      </Link>
     </Card>
   )
 }

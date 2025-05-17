@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Row, Col, Card, Image, Button, Badge } from 'react-bootstrap'
+import { Row, Col, Card, Image, Button, Badge, Container } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import Message from '../Message'
 import Loader from '../Loader'
@@ -81,157 +81,173 @@ function OrderDetailsScreen() {
     };
 
     return (
-        <div className="py-3">
+        <Container className="py-4">
             <Button 
                 variant="light" 
-                onClick={() => navigate('/orders')}
+                onClick={() => navigate('/account', { state: { activeTab: 'orders' } })}
                 className="mb-4"
             >
                 <i className="fas fa-arrow-left me-2"></i>
                 Back to Orders
             </Button>
 
-            <div className="d-flex align-items-center mb-4 flex-wrap">
-                <h2 className="mb-0 me-4">Order #{order.id}</h2>
-                <div className="d-flex gap-2 flex-wrap">
-                    <Badge 
-                        bg={getStatusColor(order.status)}
-                        className="fs-6 d-flex align-items-center"
-                    >
-                        <i className="fas fa-box me-1"></i>
-                        {order.status}
-                    </Badge>
-
-                    <Badge 
-                        bg={order.is_paid ? 'success' : 'danger'}
-                        className="fs-6 d-flex align-items-center"
-                    >
-                        <i className={`fas fa-${order.is_paid ? 'check-circle' : 'times-circle'} me-1`}></i>
-                        {order.is_paid ? 'Paid' : 'Not Paid'}
-                    </Badge>
-
-                    <Badge 
-                        bg={order.is_delivered ? 'success' : 'warning'}
-                        className="fs-6 d-flex align-items-center"
-                    >
-                        <i className={`fas fa-${order.is_delivered ? 'truck' : 'clock'} me-1`}></i>
-                        {order.is_delivered ? 'Delivered' : 'Pending Delivery'}
-                    </Badge>
-
-                    <Badge 
-                        bg="info" 
-                        className="fs-6 d-flex align-items-center"
-                    >
-                        <i className="fas fa-calendar me-1"></i>
-                        {formatDate(order.created_at)}
-                    </Badge>
-                </div>
-            </div>
-
             <Row>
-                <Col md={8}>
-                    <Card className="mb-4">
-                        <Card.Header as="h5">Items</Card.Header>
-                        <Card.Body>
+                <Col lg={8}>
+                    <Card className="mb-4 order-details-card">
+                        <Card.Header className="bg-white border-bottom-0 pt-4 px-4">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h4 className="mb-0">Order #{order.id}</h4>
+                                <div>
+                                    <Badge 
+                                        bg={getStatusColor(order.status)}
+                                        className="status-badge me-2"
+                                    >
+                                        <i className="fas fa-box me-1"></i>
+                                        {order.status}
+                                    </Badge>
+                                    <Badge 
+                                        bg="info" 
+                                        className="date-badge"
+                                    >
+                                        <i className="fas fa-calendar me-1"></i>
+                                        {formatDate(order.created_at)}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </Card.Header>
+                        <Card.Body className="px-4">
                             {order.items.map((item, index) => (
-                                <div key={index} className="d-flex align-items-center mb-3 p-2 border-bottom">
-                                    {item.product.image && (
-                                        <Image 
-                                            src={item.product.image} 
-                                            alt={item.product.productName}
-                                            style={{ 
-                                                width: '60px',
-                                                height: '60px',
-                                                objectFit: 'cover',
-                                                borderRadius: '4px'
-                                            }}
-                                            className="me-3"
-                                        />
-                                    )}
-                                    <div className="flex-grow-1">
-                                        <h6 className="mb-0">{item.product.productName}</h6>
-                                        <div className="text-muted">
-                                            {item.quantity} × ₱{item.price} = ₱{(item.quantity * item.price).toFixed(2)}
-                                        </div>
-                                    </div>
+                                <div key={index} className="order-item mb-3">
+                                    <Row className="align-items-center">
+                                        <Col xs={3} md={2}>
+                                            {item.product.image && (
+                                                <Image 
+                                                    src={item.product.image} 
+                                                    alt={item.product.productName}
+                                                    className="order-item-image"
+                                                />
+                                            )}
+                                        </Col>
+                                        <Col xs={9} md={6}>
+                                            <h6 className="mb-1">{item.product.productName}</h6>
+                                            <p className="text-muted mb-0">
+                                                Quantity: {item.quantity}
+                                            </p>
+                                        </Col>
+                                        <Col xs={12} md={4} className="text-md-end mt-2 mt-md-0">
+                                            <p className="mb-0 fw-bold">₱{(item.quantity * item.price).toFixed(2)}</p>
+                                            <small className="text-muted">₱{item.price} each</small>
+                                        </Col>
+                                    </Row>
                                 </div>
                             ))}
                         </Card.Body>
                     </Card>
 
-                    <Card className="mb-4">
-                        <Card.Header as="h5">Delivery Information</Card.Header>
-                        <Card.Body>
-                            {order.delivery_location ? (
-                                <>
-                                    <p><strong>Address:</strong> {order.delivery_location.address_details}</p>
-                                    <p><strong>Coordinates:</strong> {order.delivery_location.latitude}, {order.delivery_location.longitude}</p>
-                                </>
-                            ) : (
-                                <p className="text-muted">No delivery information available</p>
-                            )}
-                        </Card.Body>
-                    </Card>
+                    {order.delivery_location && (
+                        <Card className="mb-4 order-details-card">
+                            <Card.Header className="bg-white border-bottom-0 pt-4 px-4">
+                                <h5 className="mb-0">
+                                    <i className="fas fa-shipping-fast me-2"></i>
+                                    Delivery Information
+                                </h5>
+                            </Card.Header>
+                            <Card.Body className="px-4">
+                                <p className="mb-2">
+                                    <strong>Address:</strong><br />
+                                    {order.delivery_location.address_details}
+                                </p>
+                                <p className="mb-0">
+                                    <strong>Coordinates:</strong><br />
+                                    {order.delivery_location.latitude}, {order.delivery_location.longitude}
+                                </p>
+                            </Card.Body>
+                        </Card>
+                    )}
                 </Col>
 
-                <Col md={4}>
-                    <Card className="mb-4">
-                        <Card.Header as="h5">Order Summary</Card.Header>
-                        <Card.Body>
-                            <Row className="mb-2">
-                                <Col>Order Date:</Col>
-                                <Col className="text-end">{formatDate(order.created_at)}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col>Status:</Col>
-                                <Col className="text-end">
-                                    <span className={`badge bg-${getStatusColor(order.status)}`}>
-                                        {order.status}
-                                    </span>
-                                </Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col>Payment Status:</Col>
-                                <Col className="text-end">
-                                    {order.is_paid ? (
-                                        <span className="text-success">
-                                            <i className="fas fa-check-circle me-1"></i>
-                                            Paid on {formatDate(order.paid_at)}
-                                        </span>
-                                    ) : (
-                                        <span className="text-danger">
-                                            <i className="fas fa-times-circle me-1"></i>
-                                            Not Paid
-                                        </span>
-                                    )}
-                                </Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col>Delivery Status:</Col>
-                                <Col className="text-end">
-                                    {order.is_delivered ? (
-                                        <span className="text-success">
-                                            <i className="fas fa-check-circle me-1"></i>
-                                            Delivered on {formatDate(order.delivered_at)}
-                                        </span>
-                                    ) : (
-                                        <span className="text-danger">
-                                            <i className="fas fa-times-circle me-1"></i>
-                                            Not Delivered
-                                        </span>
-                                    )}
-                                </Col>
-                            </Row>
+                <Col lg={4}>
+                    <Card className="order-details-card">
+                        <Card.Header className="bg-white border-bottom-0 pt-4 px-4">
+                            <h5 className="mb-0">Order Summary</h5>
+                        </Card.Header>
+                        <Card.Body className="px-4">
+                            <div className="summary-item mb-3">
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span>Payment Status</span>
+                                    <Badge bg={order.is_paid ? 'success' : 'danger'}>
+                                        <i className={`fas fa-${order.is_paid ? 'check-circle' : 'times-circle'} me-1`}></i>
+                                        {order.is_paid ? 'Paid' : 'Not Paid'}
+                                    </Badge>
+                                </div>
+                                {order.is_paid && (
+                                    <small className="text-muted">
+                                        Paid on {formatDate(order.paid_at)}
+                                    </small>
+                                )}
+                            </div>
+
+                            <div className="summary-item mb-3">
+                                <div className="d-flex justify-content-between mb-2">
+                                    <span>Delivery Status</span>
+                                    <Badge bg={order.is_delivered ? 'success' : 'warning'}>
+                                        <i className={`fas fa-${order.is_delivered ? 'truck' : 'clock'} me-1`}></i>
+                                        {order.is_delivered ? 'Delivered' : 'Pending'}
+                                    </Badge>
+                                </div>
+                                {order.is_delivered && (
+                                    <small className="text-muted">
+                                        Delivered on {formatDate(order.delivered_at)}
+                                    </small>
+                                )}
+                            </div>
+
                             <hr />
-                            <Row className="mb-2">
-                                <Col><strong>Total:</strong></Col>
-                                <Col className="text-end"><strong>₱{order.total_price}</strong></Col>
-                            </Row>
+
+                            <div className="d-flex justify-content-between mt-4">
+                                <h5>Total</h5>
+                                <h5>₱{order.total_price}</h5>
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
-        </div>
+
+            <style>
+                {`
+                    .order-details-card {
+                        border: 1px solid #e9ecef;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                    }
+                    .order-item {
+                        padding: 1rem 0;
+                        border-bottom: 1px solid #e9ecef;
+                    }
+                    .order-item:last-child {
+                        border-bottom: none;
+                        padding-bottom: 0;
+                    }
+                    .order-item-image {
+                        width: 100%;
+                        height: auto;
+                        border-radius: 8px;
+                        object-fit: cover;
+                    }
+                    .status-badge, .date-badge {
+                        padding: 0.5rem 0.75rem;
+                        font-weight: 500;
+                    }
+                    .summary-item {
+                        font-size: 0.95rem;
+                    }
+                    .badge {
+                        font-weight: 500;
+                        padding: 0.5rem 0.75rem;
+                    }
+                `}
+            </style>
+        </Container>
     )
 }
 

@@ -1,0 +1,115 @@
+.cart-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.cart-item {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+}
+
+.cart-item:hover {
+  transform: translateY(-2px);
+}
+
+.cart-item img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cart-item-title {
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.cart-item-brand {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.cart-item-price {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.quantity-select {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 100%;
+}
+
+.remove-btn {
+  color: #0275d8 !important;
+  transition: color 0.2s ease;
+}
+
+.remove-btn:hover {
+  color: #025aa5 !important;
+}
+
+.order-summary {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.order-summary h4 {
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.checkout-btn {
+  background-color: #0275d8 !important;
+  border: none !important;
+  padding: 1rem !important;
+  font-weight: 600 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.checkout-btn:hover:not(:disabled) {
+  background-color: #025aa5 !important;
+}
+
+.checkout-btn:disabled {
+  background-color: #bdc3c7 !important;
+}
+
+.continue-shopping-btn {
+  color: #0275d8 !important;
+  border-color: #0275d8 !important;
+  transition: all 0.2s ease;
+}
+
+.continue-shopping-btn:hover {
+  background-color: #0275d8 !important;
+  color: white !important;
+}
+
+.clear-cart-btn {
+  color: #0275d8 !important;
+  border-color: #0275d8 !important;
+}
+
+.clear-cart-btn:hover {
+  background-color: #0275d8 !important;
+  color: white !important;
+} 

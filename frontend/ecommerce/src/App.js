@@ -20,8 +20,10 @@ import ToastNotification from './components/ToastNotification';
 
 function AppContent() {
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
   const userLogin = useSelector(state => state.userLogin);
   const { userInfo } = userLogin;
+  const [prevUserInfo, setPrevUserInfo] = useState(userInfo);
 
   useEffect(() => {
     if (userInfo) {
@@ -31,6 +33,18 @@ function AppContent() {
       }, 3000);
     }
   }, [userInfo]);
+
+  // Track logout
+  useEffect(() => {
+    if (prevUserInfo && !userInfo) {
+      // User has logged out
+      setShowLogout(true);
+      setTimeout(() => {
+        setShowLogout(false);
+      }, 3000);
+    }
+    setPrevUserInfo(userInfo);
+  }, [userInfo, prevUserInfo]);
 
   return (
     <Router>
@@ -43,6 +57,14 @@ function AppContent() {
           message={userInfo ? `Welcome, ${userInfo.name}! 👋` : ''}
           subtitle="We hope you enjoy shopping with us! ✨"
           variant="success"
+        />
+        <ToastNotification
+          show={showLogout}
+          onClose={() => setShowLogout(false)}
+          title="See you soon!"
+          message="You have been successfully logged out"
+          subtitle="Thanks for visiting Toy Kingdom! 👋"
+          variant="info"
         />
         <main className="py-3">
           <Routes>

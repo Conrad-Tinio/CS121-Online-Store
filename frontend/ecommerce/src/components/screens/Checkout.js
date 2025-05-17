@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Message from '../Message';
 import DeliveryLocationMap from '../DeliveryLocationMap';
+import logo from '../../logo/Toy_Logo.png';
 
 const Checkout = () => {
     console.log('Checkout component rendering');
@@ -156,40 +157,86 @@ const Checkout = () => {
         console.log('Rendering success page with:', { isCheckoutComplete, completedOrder });
         return (
             <Container className="py-5">
-                <Card>
-                    <Card.Body className="text-center">
-                        <h4>Thank You for Your Purchase!</h4>
-                        <p>You have successfully checked out these items:</p>
-                        <div className="mt-3">
-                            {completedOrder.items.map((item) => (
-                                <div key={item.product} className="mb-2">
-                                    {item.productName} x {item.qty} - ₱{(item.price * item.qty).toFixed(2)}
-                                </div>
-                            ))}
+                <Card className="border-0 shadow-sm">
+                    <Card.Body className="text-center py-5">
+                        {/* Logo with Badge */}
+                        <div className="mb-4 position-relative d-inline-block">
+                            <div className="bg-white rounded-circle p-3 d-inline-block" style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                                <img 
+                                    src={logo} 
+                                    alt="Toy Kingdom Logo" 
+                                    style={{ 
+                                        height: '60px',
+                                        width: '60px',
+                                        objectFit: 'contain'
+                                    }} 
+                                />
+                            </div>
+                            <span 
+                                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success"
+                                style={{ fontSize: '1rem', padding: '0.5rem' }}
+                            >
+                                ✓
+                            </span>
                         </div>
-                        <div className="mt-4">
-                            <h5>Total: ₱{completedOrder.total.toFixed(2)}</h5>
+
+                        {/* Thank You Message */}
+                        <h2 className="mb-3 fw-bold text-primary">Thank You for Your Purchase!</h2>
+                        <p className="text-muted mb-5">We appreciate your business!</p>
+
+                        {/* Order Details Section */}
+                        <div className="mt-4 pt-4 border-top">
+                            <h4 className="mb-4">Order Details</h4>
+                            <Row className="justify-content-center">
+                                <Col md={8}>
+                                    {completedOrder.items.map((item) => (
+                                        <div key={item.product} className="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                            <Image 
+                                                src={item.image} 
+                                                alt={item.productName} 
+                                                style={{ width: '50px', height: '50px', objectFit: 'cover' }} 
+                                                className="rounded me-3"
+                                            />
+                                            <div className="flex-grow-1 text-start">
+                                                <h6 className="mb-0">{item.productName}</h6>
+                                                <small className="text-muted">Quantity: {item.qty}</small>
+                                            </div>
+                                            <div className="text-primary fw-bold">
+                                                ₱{(item.price * item.qty).toFixed(2)}
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    <div className="d-flex justify-content-between mt-4 pt-3 border-top">
+                                        <h5>Total Amount:</h5>
+                                        <h5 className="text-primary">₱{completedOrder.total.toFixed(2)}</h5>
+                                    </div>
+
+                                    <div className="mt-3 p-3 bg-light rounded">
+                                        <h6 className="mb-2">Delivery Location:</h6>
+                                        <p className="mb-1">{completedOrder.deliveryLocation.address}</p>
+                                        <small className="text-muted">
+                                            Coordinates: {completedOrder.deliveryLocation.position[0].toFixed(6)}, 
+                                            {completedOrder.deliveryLocation.position[1].toFixed(6)}
+                                        </small>
                         </div>
-                        <div className="mt-2">
-                            <p>Delivery Location: {completedOrder.deliveryLocation.address}</p>
-                            <p>Coordinates: {completedOrder.deliveryLocation.position[0].toFixed(6)}, {completedOrder.deliveryLocation.position[1].toFixed(6)}</p>
+                                </Col>
+                            </Row>
                         </div>
+
+                        {/* Action Buttons */}
+                        <div className="mt-5 d-flex justify-content-center gap-3">
                         <Button 
                             variant="primary" 
-                            className="mt-4"
+                                size="lg"
                             onClick={continueShoppingHandler}
                         >
                             Continue Shopping
                         </Button>
-                        
-                        {/* Add a button to view order details if needed */}
-                        <div className="mt-3">
                             <Button 
-                                variant="outline-secondary"
-                                onClick={() => {
-                                    console.log('Navigate to orders page');
-                                    navigate('/orders');
-                                }}
+                                variant="outline-primary"
+                                size="lg"
+                                onClick={() => navigate('/account', { state: { activeTab: 'orders' } })}
                             >
                                 View Your Orders
                             </Button>

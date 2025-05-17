@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Nav, Table, Badge } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faShoppingBag } from '@fortawesome/free-solid-svg-icons';
 
 function UserAccountScreen() {
     const userLogin = useSelector(state => state.userLogin);
     const { userInfo } = userLogin;
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('profile');
+    const location = useLocation();
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'profile');
     const [editMode, setEditMode] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -34,6 +37,12 @@ function UserAccountScreen() {
             fetchOrders();
         }
     }, [userInfo, navigate]);
+
+    useEffect(() => {
+        if (location.state?.activeTab) {
+            setActiveTab(location.state.activeTab);
+        }
+    }, [location.state]);
 
     const fetchOrders = async () => {
         try {
@@ -158,43 +167,57 @@ function UserAccountScreen() {
                 ) : error ? (
                     <Alert variant="danger">{error}</Alert>
                 ) : orders.length === 0 ? (
-                    <Alert variant="info">You haven't placed any orders yet.</Alert>
+                    <div className="text-center py-4">
+                        <FontAwesomeIcon icon={faShoppingBag} style={{ fontSize: '3rem', color: '#bdc3c7' }} className="mb-3" />
+                        <p className="text-muted mb-4">You haven't placed any orders yet.</p>
+                        <Button 
+                            variant="outline-primary"
+                            onClick={() => navigate('/')}
+                        >
+                            Start Shopping
+                        </Button>
+                    </div>
                 ) : (
-                    <Table responsive hover>
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Date</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders.map(order => {
-                                console.log('Rendering order:', order);
-                                const totalPrice = order.total_price ? parseFloat(order.total_price) : 0;
-                                return (
-                                    <tr key={order.id}>
-                                        <td>#{order.id ? order.id.toString().slice(-6) : 'N/A'}</td>
-                                        <td>{order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</td>
-                                        <td>${totalPrice.toFixed(2)}</td>
-                                        <td>{getOrderStatusBadge(order.status || 'Pending')}</td>
-                                        <td>
-                                            <Button
-                                                variant="outline-primary"
-                                                size="sm"
-                                                onClick={() => navigate(`/order/${order.id}`)}
-                                                disabled={!order.id}
-                                            >
-                                                View Details
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </Table>
+                    <div>
+                        {orders.map(order => {
+                            console.log('Rendering order:', order);
+                            const totalPrice = order.total_price ? parseFloat(order.total_price) : 0;
+                            return (
+                                <Card key={order.id} className="mb-3 order-card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/order/${order.id}`)}>
+                                    <Card.Body>
+                                        <Row className="align-items-center">
+                                            <Col md={3}>
+                                                <div className="mb-2 mb-md-0">
+                                                    <small className="text-muted">Order ID</small>
+                                                    <h6 className="mb-0">#{order.id ? order.id.toString().slice(-6) : 'N/A'}</h6>
+                                                </div>
+                                            </Col>
+                                            <Col md={3}>
+                                                <div className="mb-2 mb-md-0">
+                                                    <small className="text-muted">Date</small>
+                                                    <h6 className="mb-0">{order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</h6>
+                                                </div>
+                                            </Col>
+                                            <Col md={2}>
+                                                <div className="mb-2 mb-md-0">
+                                                    <small className="text-muted">Total</small>
+                                                    <h6 className="mb-0">₱{totalPrice.toFixed(2)}</h6>
+                                                </div>
+                                            </Col>
+                                            <Col md={2}>
+                                                <div className="mb-2 mb-md-0">
+                                                    {getOrderStatusBadge(order.status || 'Pending')}
+                                                </div>
+                                            </Col>
+                                            <Col md={2} className="text-end">
+                                                <i className="fas fa-chevron-right text-muted"></i>
+                                            </Col>
+                                        </Row>
+                                    </Card.Body>
+                                </Card>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
         );
@@ -258,6 +281,18 @@ function UserAccountScreen() {
                     .nav-tabs-custom .nav-link.active {
                         background-color: white;
                         border-color: transparent;
+                    }
+                    .order-card {
+                        transition: transform 0.2s ease, box-shadow 0.2s ease;
+                        border: 1px solid #e9ecef;
+                    }
+                    .order-card:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    }
+                    .badge {
+                        padding: 0.5rem 0.75rem;
+                        font-weight: 500;
                     }
                 `}
             </style>

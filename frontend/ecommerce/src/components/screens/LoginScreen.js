@@ -1,53 +1,35 @@
 import React, { useState, useEffect } from "react";
-import {
-  Container,
-  Row,
-  Col,
-  Button,
-  Form,
-  Card,
-  InputGroup,
-  Alert,
-} from "react-bootstrap";
+import { Container, Row, Col, Button, Form } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Loader from "../Loader";
 import Message from "../Message";
-import { validEmail } from "./Regex";
 import { login } from "../../actions/userActions";
+import logo from '../../logo/Toy_Logo.png';
 
 function LoginScreen() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [password1, setPassword1] = useState("");
-  const [message, setMessage] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
-  const userLogin = useSelector(state => state.userLogin)
-  const {error, loading, userInfo} = userLogin
+  const userLogin = useSelector(state => state.userLogin);
+  const { error, loading, userInfo } = userLogin;
 
   const location = useLocation();
-  const redirect = location.search ? location.search.split('=')[1] : '/'
+  const redirect = location.search ? location.search.split('=')[1] : '/';
   
   useEffect(() => {
-    if(userInfo) {
+    if (userInfo) {
       navigate(redirect);
     }
-  }, [userInfo, redirect, navigate])
-
-  useEffect(() => {
-    const activateAccount = localStorage.getItem('activateMessage');
-    if (activateAccount) {
-      setMessage(activateAccount);
-      localStorage.removeItem('activateMessage');
-    }
-  }, []);
+  }, [userInfo, redirect, navigate]);
 
   const submitHandler = (e) => {
-    e.preventDefault()
-    dispatch(login(email, password1))
+    e.preventDefault();
+    dispatch(login(email, password));
   };
 
   const togglePassword = () => {
@@ -55,105 +37,89 @@ function LoginScreen() {
   };
 
   return (
-    <>
-      <Container className="mt-3">
-        <Row>
-          <Col md={4}></Col>
-          <Col md={4}>
-            <Card>
-              <Card.Header as="h3" className="text-center bg-black text-light">
-                LOGIN
-              </Card.Header>
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col md={6} lg={5}>
+          <div className="text-center mb-4">
+            <div className="mb-2">
+              <img 
+                src={logo} 
+                alt="Toy Kingdom Logo" 
+                style={{ 
+                  height: '80px',
+                  marginBottom: '10px'
+                }} 
+              />
+            </div>
+            <h1 className="fw-bold mb-4">Sign in</h1>
+            <p className="text-muted">
+              Access your account to manage orders,<br />
+              view your wishlist and more.
+            </p>
+          </div>
 
-              <Card.Body>
-                {error && <Message variant='danger'>{error}</Message>}
-                {message && <Message variant='info'>{message}</Message>}
-                {loading && <Loader />}
-                
-                <Form onSubmit={submitHandler}>
-                  <Form.Label>Email Address</Form.Label>
-                  <Form.Group className="mb-3" controlId="email">
-                    <Form.Control 
-                      type="email" 
-                      placeholder="Email" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required 
-                    />
-                  </Form.Group>
+          {error && <Message variant='danger'>{error}</Message>}
+          {loading && <Loader />}
+          
+          <Form onSubmit={submitHandler}>
+            <Form.Group className="mb-3">
+              <Form.Label>Email address</Form.Label>
+              <Form.Control
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="form-control-lg"
+              />
+            </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>Password</Form.Label>
-                    <InputGroup>
-                      <Form.Control
-                        placeholder="Password"
-                        required
-                        value={password1}
-                        onChange={(e) => setPassword1(e.target.value)}
-                        type={showPassword ? "text" : "password"}
-                        id="password1"
-                        style={{ 
-                          WebkitTextSecurity: showPassword ? 'none' : 'disc',
-                          MozTextSecurity: showPassword ? 'none' : 'disc'
-                        }}
-                        className="hide-password-reveal"
-                      />
-                      <Button 
-                        variant="outline-secondary"
-                        onClick={togglePassword}
-                        style={{ border: 'none', background: 'transparent' }}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                      </Button>
-                    </InputGroup>
-                  </Form.Group>
+            <Form.Group className="mb-4">
+              <Form.Label>Password</Form.Label>
+              <div className="position-relative">
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="form-control-lg pe-5"
+                />
+                <Button
+                  variant="link"
+                  onClick={togglePassword}
+                  className="position-absolute end-0 top-50 translate-middle-y text-muted"
+                  style={{ border: 'none', textDecoration: 'none' }}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </div>
+            </Form.Group>
 
-                  <style>
-                    {`
-                      .hide-password-reveal::-ms-reveal,
-                      .hide-password-reveal::-ms-clear {
-                        display: none;
-                      }
-                      input[type="password"]::-webkit-contacts-auto-fill-button,
-                      input[type="password"]::-webkit-credentials-auto-fill-button,
-                      input[type="password"]::-webkit-password-toggle {
-                        visibility: hidden;
-                        display: none !important;
-                        pointer-events: none;
-                        height: 0;
-                        width: 0;
-                        margin: 0;
-                      }
-                    `}
-                  </style>
+            <div className="d-grid mb-4">
+              <Button
+                variant="primary"
+                type="submit"
+                size="lg"
+                className="rounded-pill py-3"
+              >
+                Sign in
+              </Button>
+            </div>
 
-                  <br />
-                  <div className="d-grid gap-2">
-                    <Button className="btn btn-md btn-success" type="submit">
-                      Login
-                    </Button>
-                  </div>
-                </Form>
-
-                <Row className="py-3">
-                  <Col>
-                    Do not have an account?
-                    <Link
-                      to="/register"
-                      style={{ color: "green", textDecoration: "none" }}
-                    >
-                      {" "}
-                      Register now.
-                    </Link>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}></Col>
-        </Row>
-      </Container>
-    </>
+            <div className="text-center">
+              <p className="mb-0">
+                Don't have an account?{' '}
+                <Link
+                  to={redirect ? `/register?redirect=${redirect}` : '/register'}
+                  className="text-primary text-decoration-none"
+                >
+                  Create one now
+                </Link>
+              </p>
+            </div>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 

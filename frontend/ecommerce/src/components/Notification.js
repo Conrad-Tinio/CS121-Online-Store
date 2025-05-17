@@ -1,5 +1,7 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGift } from '@fortawesome/free-solid-svg-icons';
 
 const Notification = ({ show, onClose, title, message, variant = 'primary' }) => {
   return (
@@ -14,7 +16,7 @@ const Notification = ({ show, onClose, title, message, variant = 'primary' }) =>
     >
       <Modal.Header className={`bg-${variant} text-white`}>
         <Modal.Title className="w-100 text-center">
-          <i className="fas fa-gift me-2"></i> {title}
+          <FontAwesomeIcon icon={faGift} className="me-2" /> {title}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="text-center py-4">

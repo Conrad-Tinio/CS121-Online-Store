@@ -50,13 +50,45 @@ function HomeScreen() {
       ) : error ? (
         <Message variant='danger'>{error}</Message>
       ) : (
-        <Row>
-          {products.map(product => (
-            <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
-              <Product product={product} />
-            </Col>
-          ))}
-        </Row>
+        <div className="products-container">
+          <style>
+            {`
+              .products-container .row {
+                margin-right: -60px !important;
+                margin-left: -60px !important;
+                row-gap: 120px !important;
+              }
+              .products-container .col {
+                padding: 60px !important;
+              }
+              .product-wrapper {
+                margin-bottom: 120px !important;
+              }
+              @media (max-width: 768px) {
+                .products-container .row {
+                  margin-right: -30px !important;
+                  margin-left: -30px !important;
+                  row-gap: 80px !important;
+                }
+                .products-container .col {
+                  padding: 30px !important;
+                }
+                .product-wrapper {
+                  margin-bottom: 80px !important;
+                }
+              }
+            `}
+          </style>
+          <Row>
+            {products.map(product => (
+              <Col key={product._id} sm={12} md={6} lg={4} xl={3} className="col">
+                <div className="product-wrapper">
+                  <Product product={product} />
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
       )}
     </div>
   );

@@ -1,73 +1,51 @@
 // TEMPLATE FOR RATINGS
 
-import React from 'react'
+import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faStar as faStarSolid } from '@fortawesome/free-solid-svg-icons';
+import { faStar as faStarRegular, faStarHalfAlt } from '@fortawesome/free-solid-svg-icons';
 
 function Rating({ value, text, color }) {
     return (
         <div className="rating">
             <span>
-                <i style={{ color }} className={
-                    value >= 1
-                        ? 'fas fa-star' //solid star
-                        : value >= 0.5 
-                            ? 'fas fa-star-half-alt'
-                            : 'far fa-star' //if both cases fail its empty star
-                }>
-
-                </i>
+                <FontAwesomeIcon
+                    icon={value >= 1 ? faStarSolid : value >= 0.5 ? faStarHalfAlt : faStarRegular}
+                    style={{ color }}
+                />
             </span>
 
             <span>
-                <i style={{ color }} className={
-                    value >= 2
-                        ? 'fas fa-star'
-                        : value >= 1.5
-                            ? 'fas fa-star-half-alt'
-                            : 'far fa-star'
-                }>
-
-                </i>
+                <FontAwesomeIcon
+                    icon={value >= 2 ? faStarSolid : value >= 1.5 ? faStarHalfAlt : faStarRegular}
+                    style={{ color }}
+                />
             </span>
 
             <span>
-                <i style={{ color }} className={
-                    value >= 3
-                        ? 'fas fa-star'
-                        : value >= 2.5
-                            ? 'fas fa-star-half-alt'
-                            : 'far fa-star'
-                }>
-
-                </i>
+                <FontAwesomeIcon
+                    icon={value >= 3 ? faStarSolid : value >= 2.5 ? faStarHalfAlt : faStarRegular}
+                    style={{ color }}
+                />
             </span>
 
             <span>
-                <i style={{ color }} className={
-                    value >= 4
-                        ? 'fas fa-star'
-                        : value >= 3.5
-                            ? 'fas fa-star-half-alt'
-                            : 'far fa-star'
-                }>
-
-                </i>
+                <FontAwesomeIcon
+                    icon={value >= 4 ? faStarSolid : value >= 3.5 ? faStarHalfAlt : faStarRegular}
+                    style={{ color }}
+                />
             </span>
 
             <span>
-                <i style={{ color }} className={
-                    value >= 5
-                        ? 'fas fa-star'
-                        : value >= 4.5
-                            ? 'fas fa-star-half-alt'
-                            : 'far fa-star'
-                }>
-
-                </i>
+                <FontAwesomeIcon
+                    icon={value >= 5 ? faStarSolid : value >= 4.5 ? faStarHalfAlt : faStarRegular}
+                    style={{ color }}
+                />
             </span>
 
             <span>{text && text}</span>
         </div>
-    )
+    );
 }
 
-export default Rating
+export default Rating;

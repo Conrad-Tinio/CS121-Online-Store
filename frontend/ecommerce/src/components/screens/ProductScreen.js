@@ -1,44 +1,37 @@
 import React from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Container, ListGroupItem } from "react-bootstrap";
-import { Row, Col, Image, ListGroup, Button, Card, Alert } from "react-bootstrap";
+import { Container } from "react-bootstrap";
+import { Row, Col, Image, ListGroup, Button, Form } from "react-bootstrap";
 import Rating from "../Rating";
 import { listProductDetails } from "../../actions/productActions";
 import { addToWishlist, listWishlist } from "../../actions/wishlistActions";
 import { useDispatch, useSelector } from "react-redux";
 import Loader from "../Loader";
 import Message from "../Message";
-import { Form } from "react-bootstrap";
 import { addToCart } from "../../actions/cartActions";
 
-function ProductScreen({ params }) {
+function ProductScreen() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [showLoginMessage, setShowLoginMessage] = useState(false);
-  const [loginButtonClicked, setLoginButtonClicked] = useState(false);
-  const [wishlistLoginClicked, setWishlistLoginClicked] = useState(false);
-  const [notification, setNotification] = useState(null);
   const dispatch = useDispatch();
   const productDetails = useSelector((state) => state.productDetails);
   const { error, loading, product } = productDetails;
   
-  // Get user login information
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
-  // Get wishlist information
   const wishlist = useSelector((state) => state.wishlist);
-  const { wishlistItems, loading: wishlistLoading, error: wishlistError } = wishlist;
+  const { wishlistItems } = wishlist;
+
+  const isInWishlist = wishlistItems?.some(item => String(item.product._id) === String(id));
 
   const handleTagClick = (filterType, value) => {
     if (!filterType || !value) return;
-    console.log('Applying filter:', filterType, value);
     const searchParams = new URLSearchParams(window.location.search);
     
-    // Handle arrival status tags differently
     if (filterType.toLowerCase() === 'arrival status') {
       searchParams.set('arrival', value.toLowerCase());
     } else {
@@ -53,7 +46,7 @@ function ProductScreen({ params }) {
     if (!tags || !Array.isArray(tags) || tags.length === 0) return null;
     
     return (
-      <div className="d-flex flex-wrap gap-2">
+      <div className="d-flex flex-wrap gap-2 mb-3">
         {tags.map((tag, index) => {
           if (!tag.tag_type || !tag.name) return null;
 
@@ -61,7 +54,7 @@ function ProductScreen({ params }) {
             <span 
               key={index}
               onClick={() => handleTagClick(tag.tag_type, tag.name)}
-              className={`badge bg-${tag.color || 'secondary'} d-flex align-items-center`}
+              className={`badge bg-${tag.color || 'secondary'}`}
               style={{ 
                 padding: '8px 12px', 
                 fontSize: '0.9rem',
@@ -76,22 +69,27 @@ function ProductScreen({ params }) {
             </span>
           );
         })}
+        {isInWishlist && (
+          <span 
+            onClick={() => navigate('/wishlist')}
+            className="badge bg-info"
+            style={{ 
+              padding: '8px 12px', 
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              opacity: 0.9
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
+          >
+            <span className="me-1">♥</span>
+            Wishlisted
+          </span>
+        )}
       </div>
     );
   };
-
-  // Check if product is in wishlist
-  const isInWishlist = wishlistItems?.some(item => {
-    const itemId = String(item.product._id);
-    const currentId = String(id);
-    return itemId === currentId;
-  });
-
-  useEffect(() => {
-    console.log('Current product ID:', id);
-    console.log('Wishlist items:', wishlistItems);
-    console.log('Is in wishlist:', isInWishlist);
-  }, [id, wishlistItems, isInWishlist]);
 
   useEffect(() => {
     dispatch(listProductDetails(id));
@@ -100,261 +98,130 @@ function ProductScreen({ params }) {
     }
   }, [dispatch, id, userInfo]);
 
-  useEffect(() => {
-    // Show error notification if wishlist operation fails
-    if (wishlistError) {
-      setNotification({ type: 'danger', message: wishlistError });
-      setTimeout(() => setNotification(null), 3000);
-    }
-  }, [wishlistError]);
-
-  // Set initial notification if item is in wishlist
-  useEffect(() => {
-    if (isInWishlist) {
-      setNotification({ 
-        type: 'info', 
-        message: 'This item is already in your wishlist' 
-      });
-    } else {
-      setNotification(null);
-    }
-  }, [isInWishlist]);
-
   const addToCartHandler = () => {
     if (!userInfo) {
       setShowLoginMessage(true);
-      setLoginButtonClicked(true);
     } else {
       dispatch(addToCart(id, quantity));
       navigate('/cart');
     }
   }
 
-  const addToWishlistHandler = async () => {
+  const addToWishlistHandler = () => {
     if (!userInfo) {
       setShowLoginMessage(true);
-      setWishlistLoginClicked(true);
       return;
     }
-    
-    if (isInWishlist) {
-      setNotification({ 
-        type: 'info', 
-        message: 'This item is already in your wishlist' 
-      });
-      return;
-    }
-
-    try {
-      await dispatch(addToWishlist(id));
-      setNotification({ 
-        type: 'success', 
-        message: 'Item added to wishlist successfully!' 
-      });
-      setTimeout(() => setNotification(null), 3000);
-    } catch (error) {
-      setNotification({ 
-        type: 'danger', 
-        message: error.response?.data?.detail || 'Failed to add item to wishlist' 
-      });
-      setTimeout(() => setNotification(null), 3000);
+    if (!isInWishlist) {
+      dispatch(addToWishlist(id));
     }
   }
 
   return (
-    <Container>
-      <div>
-        <Link to="/" className="btn btn-dark my-3">
-          Go Back
-        </Link>
+    <Container className="py-4">
+      <Link to="/" className="btn btn-light mb-4">
+        <i className="fas fa-arrow-left me-2"></i>Back
+      </Link>
 
-        {notification && (
-          <Alert 
-            variant={notification.type} 
-            onClose={() => setNotification(null)} 
-            dismissible={notification.type !== 'info'}
-          >
-            {notification.message}
-          </Alert>
-        )}
+      {loading ? (
+        <Loader />
+      ) : error ? (
+        <Message variant='danger'>{error}</Message>
+      ) : (
+        <Row>
+          <Col md={6} className="mb-4">
+            <Image src={product.image} alt={product.productName} fluid className="rounded" />
+          </Col>
 
-        {
-          loading ? (
-            <Loader/>
-          ) : error ? (
-            <Message variant='danger'>{error}</Message>
-          ) : (
-            <Row>
-              <Col md={6}>
-                <Image src={product.image} all={product.name} fluid />
-              </Col>
+          <Col md={6}>
+            <div className="mb-4">
+              <h2 className="mb-3">{product.productName}</h2>
+              {renderTags(product.tags)}
+              <div className="d-flex align-items-center mb-3">
+                <Rating
+                  value={product.rating}
+                  text={`${product.numReviews} reviews`}
+                  color={"#f8e825"}
+                />
+              </div>
+              <h3 className="mb-4">₱{product.price}</h3>
+            </div>
 
-              <Col md={3}>
-                <Card>
-                  <ListGroup variant="flush">
-                    <ListGroup.Item>
-                      <h3 className="mb-3">{product.productName}</h3>
-                      <div className="d-flex flex-wrap gap-2" style={{ margin: '-2px' }}>
-                        {renderTags(product.tags)}
+            <ListGroup variant="flush" className="mb-4">
+              <ListGroup.Item>
+                <Row>
+                  <Col>Status:</Col>
+                  <Col>
+                    <strong>{product.stockCount > 0 ? "In Stock" : "Out of Stock"}</strong>
+                  </Col>
+                </Row>
+              </ListGroup.Item>
 
-                        {/* Wishlist Tag */}
-                        {isInWishlist && (
-                          <span 
-                            onClick={() => navigate('/wishlist')}
-                            className="badge bg-info d-flex align-items-center"
-                            style={{ 
-                              padding: '8px 12px', 
-                              fontSize: '0.9rem',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              opacity: 0.9
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                            onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
-                          >
-                            <span className="me-1">♥</span>
-                            Wishlisted
-                          </span>
-                        )}
-                      </div>
-                    </ListGroup.Item>
+              {product.stockCount > 0 && (
+                <ListGroup.Item>
+                  <Row className="align-items-center">
+                    <Col>Quantity:</Col>
+                    <Col xs="auto">
+                      <Form.Control
+                        as="select"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Number(e.target.value))}
+                        className="form-select-lg"
+                      >
+                        {[...Array(product.stockCount).keys()].map((x) => (
+                          <option key={x + 1} value={x + 1}>
+                            {x + 1}
+                          </option>
+                        ))}
+                      </Form.Control>
+                    </Col>
+                  </Row>
+                </ListGroup.Item>
+              )}
 
-                    <ListGroup.Item>
-                      <Rating
-                        value={product.rating}
-                        text={` ${product.numReviews} reviews`}
-                        color={"#f8e825"}
-                      />
-                    </ListGroup.Item>
+              {showLoginMessage && (
+                <ListGroup.Item>
+                  <Message variant="info">
+                    Please <Link to="/login">login</Link> to add items to your cart
+                  </Message>
+                </ListGroup.Item>
+              )}
+            </ListGroup>
 
-                    <ListGroup.Item>
-                      <strong>Brand:</strong> {product.productBrand}
-                    </ListGroup.Item>
+            <div className="d-grid gap-2">
+              <Button
+                variant="primary"
+                size="lg"
+                className="py-3"
+                onClick={addToCartHandler}
+                disabled={product.stockCount === 0}
+              >
+                {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
+              </Button>
 
-                    <ListGroup.Item style={{ textAlign: "justify" }}>
-                      <strong>Description:</strong> {product.productInfo}
-                    </ListGroup.Item>
-                  </ListGroup>
-                </Card>
-              </Col>
+              {product.stockCount === 0 && (
+                <Button
+                  variant={isInWishlist ? "secondary" : "outline-primary"}
+                  size="lg"
+                  className="py-3"
+                  onClick={addToWishlistHandler}
+                  disabled={isInWishlist}
+                >
+                  {isInWishlist ? 'In Wishlist' : 'Add to Wishlist'}
+                </Button>
+              )}
+            </div>
 
-              <Col md={3}>
-                <Card>
-                  <ListGroup variant="flush">
-                    <ListGroup.Item>
-                      <Row>
-                        <Col>Price:</Col>
-                        <Col>
-                          <strong>₱{product.price}</strong>
-                        </Col>
-                      </Row>
-                    </ListGroup.Item>
-                    <ListGroup.Item>
-                      <Row>
-                        <Col>Status:</Col>
-                        <Col>
-                          {product.stockCount > 0 ? "In Stock" : "Out of Stock"} ({product.stockCount})
-                        </Col>
-                      </Row>
-                    </ListGroup.Item>
-
-                    {showLoginMessage && (
-                      <ListGroup.Item>
-                        <Message variant="info">
-                          Please <Link to="/login">login</Link> to add items to your cart
-                        </Message>
-                      </ListGroup.Item>
-                    )}
-
-                    {product.stockCount > 0 && (
-                        <ListGroup.Item>
-                          <Row>
-                            <Col>Quantity: </Col>
-                            <Col xs="auto" className="my-1">
-                              <Form.Control 
-                                as="select"
-                                value={quantity}
-                                onChange={(e) => setQuantity(e.target.value)}
-                                disabled={!userInfo}
-                              >
-                                {[... Array(product.stockCount).keys()].map((x) => (
-                                  <option key={x+1} value={x+1}>
-                                    {x+1}
-                                  </option>
-                                ))}
-                              </Form.Control>
-                            </Col>
-                          </Row>
-                        </ListGroup.Item>
-                      )
-                    }
-
-                    <ListGroup.Item>
-                      {!userInfo && loginButtonClicked ? (
-                        <Button
-                          className="btn-block btn-secondary"
-                          type="button"
-                          disabled
-                          style={{ cursor: 'not-allowed' }}
-                        >
-                          Login Required
-                        </Button>
-                      ) : (
-                        <Button
-                          className="btn-block btn-success" 
-                          disabled={product.stockCount === 0}
-                          type="button"
-                          onClick={addToCartHandler}
-                        >
-                          {userInfo ? 'Add to Cart' : 'Login to Add to Cart'}
-                        </Button>
-                      )}
-                    </ListGroup.Item>
-
-                    {product.stockCount === 0 && (
-                      <ListGroup.Item>
-                        {!userInfo && wishlistLoginClicked ? (
-                          <Button
-                            className="btn-block btn-secondary"
-                            type="button"
-                            disabled
-                            style={{ cursor: 'not-allowed' }}
-                          >
-                            Login Required
-                          </Button>
-                        ) : (
-                          <Button
-                            className={`btn-block ${isInWishlist ? 'btn-secondary' : 'btn-info'}`}
-                            type="button"
-                            onClick={isInWishlist ? undefined : addToWishlistHandler}
-                            disabled={isInWishlist || wishlistLoading || (showLoginMessage && !userInfo)}
-                            style={{
-                              cursor: isInWishlist || (showLoginMessage && !userInfo) ? 'not-allowed' : 'pointer',
-                              transition: 'all 0.2s ease',
-                              opacity: 0.9
-                            }}
-                            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                            onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
-                          >
-                            {wishlistLoading ? 'Adding to Wishlist...' : 
-                              !userInfo 
-                                ? 'Login to Add to Wishlist'
-                                : isInWishlist
-                                  ? 'Already in Wishlist'
-                                  : 'Add to Wishlist'
-                            }
-                          </Button>
-                        )}
-                      </ListGroup.Item>
-                    )}
-                  </ListGroup>
-                </Card>
-              </Col>
-            </Row>
-          )
-        }
-
-      </div>
+            <div className="mt-4">
+              <h4>Product Details</h4>
+              <p>{product.productInfo}</p>
+              {product.productBrand && (
+                <p><strong>Brand:</strong> {product.productBrand}</p>
+              )}
+            </div>
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 }

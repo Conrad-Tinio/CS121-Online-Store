@@ -5,7 +5,6 @@ import {
   Col,
   Button,
   Form,
-  Card,
   InputGroup,
 } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -15,6 +14,7 @@ import Loader from "../Loader";
 import Message from "../Message";
 import { validEmail } from "./Regex";
 import { register } from "../../actions/userActions";
+import logo from '../../logo/Toy_Logo.png';
 
 function SignupScreen() {
   const navigate = useNavigate()
@@ -74,149 +74,132 @@ function SignupScreen() {
   };
 
   return (
-    <>
-      <Container className="mt-3">
-        <Row>
-          <Col md={4}></Col>
-          <Col md={4}>
-            <Card>
-              <Card.Header as="h3" className="text-center bg-black text-light">
-                REGISTER
-              </Card.Header>
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col md={6} lg={5}>
+          <div className="text-center mb-4">
+            <div className="mb-2">
+              <img 
+                src={logo} 
+                alt="Toy Kingdom Logo" 
+                style={{ 
+                  height: '80px',
+                  marginBottom: '10px'
+                }} 
+              />
+            </div>
+            <h1 className="fw-bold mb-4">Create account</h1>
+            <p className="text-muted">
+              Faster check-outs, personalised recommendations,<br />
+              save your wishlist and other benefits.
+            </p>
+          </div>
 
-              <Card.Body>
-                {loading ? <Loader /> : null}
-                {message && <Message variant='danger'>{message}</Message>}
-                
-                <Form onSubmit={submitHandler}>
-                  <Form.Group className="mb-3" controlId="fname">
-                    <Form.Control
-                      type="text"
-                      placeholder="First Name"
-                      value={fname}
-                      onChange={(e) => setFname(e.target.value)}
-                      required
-                    />
-                  </Form.Group>
+          {loading && <Loader />}
+          {message && <Message variant='danger'>{message}</Message>}
+          
+          <Form onSubmit={submitHandler}>
+            <Form.Group className="mb-3">
+              <Form.Label>First name</Form.Label>
+              <Form.Control
+                type="text"
+                value={fname}
+                onChange={(e) => setFname(e.target.value)}
+                required
+                className="form-control-lg"
+              />
+            </Form.Group>
 
-                  <Form.Group className="mb-3" controlId="lname">
-                    <Form.Control
-                      type="text"
-                      placeholder="Last Name"
-                      value={lname}
-                      onChange={(e) => setLname(e.target.value)}
-                      required
-                    />
-                  </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Last name</Form.Label>
+              <Form.Control
+                type="text"
+                value={lname}
+                onChange={(e) => setLname(e.target.value)}
+                required
+                className="form-control-lg"
+              />
+            </Form.Group>
 
-                  <Form.Group className="mb-3" controlId="email">
-                    <Form.Control 
-                      type="email" 
-                      placeholder="Email" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required 
-                    />
-                  </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Email address</Form.Label>
+              <Form.Control
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="form-control-lg"
+              />
+            </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>Password</Form.Label>
-                    <InputGroup>
-                      <Form.Control
-                        placeholder="Password"
-                        required
-                        value={password1}
-                        onChange={(e) => setPassword1(e.target.value)}
-                        type={showPassword1 ? "text" : "password"}
-                        id="password1"
-                        style={{ 
-                          WebkitTextSecurity: showPassword1 ? 'none' : 'disc',
-                          MozTextSecurity: showPassword1 ? 'none' : 'disc'
-                        }}
-                        className="hide-password-reveal"
-                      />
-                      <Button 
-                        variant="outline-secondary"
-                        onClick={togglePassword1}
-                        style={{ border: 'none', background: 'transparent' }}
-                      >
-                        {showPassword1 ? <FaEyeSlash /> : <FaEye />}
-                      </Button>
-                    </InputGroup>
-                  </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Password</Form.Label>
+              <div className="position-relative">
+                <Form.Control
+                  type={showPassword1 ? "text" : "password"}
+                  value={password1}
+                  onChange={(e) => setPassword1(e.target.value)}
+                  required
+                  className="form-control-lg pe-5"
+                />
+                <Button
+                  variant="link"
+                  onClick={togglePassword1}
+                  className="position-absolute end-0 top-50 translate-middle-y text-muted"
+                  style={{ border: 'none', textDecoration: 'none' }}
+                >
+                  {showPassword1 ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </div>
+            </Form.Group>
 
-                  <Form.Group className="mb-3">
-                    <Form.Label>Confirm Password</Form.Label>
-                    <InputGroup>
-                      <Form.Control
-                        placeholder="Confirm Password"
-                        required
-                        value={password2}
-                        onChange={(e) => setPassword2(e.target.value)}
-                        type={showPassword2 ? "text" : "password"}
-                        id="password2"
-                        style={{ 
-                          WebkitTextSecurity: showPassword2 ? 'none' : 'disc',
-                          MozTextSecurity: showPassword2 ? 'none' : 'disc'
-                        }}
-                        className="hide-password-reveal"
-                      />
-                      <Button 
-                        variant="outline-secondary"
-                        onClick={togglePassword2}
-                        style={{ border: 'none', background: 'transparent' }}
-                      >
-                        {showPassword2 ? <FaEyeSlash /> : <FaEye />}
-                      </Button>
-                    </InputGroup>
-                  </Form.Group>
+            <Form.Group className="mb-4">
+              <Form.Label>Confirm password</Form.Label>
+              <div className="position-relative">
+                <Form.Control
+                  type={showPassword2 ? "text" : "password"}
+                  value={password2}
+                  onChange={(e) => setPassword2(e.target.value)}
+                  required
+                  className="form-control-lg pe-5"
+                />
+                <Button
+                  variant="link"
+                  onClick={togglePassword2}
+                  className="position-absolute end-0 top-50 translate-middle-y text-muted"
+                  style={{ border: 'none', textDecoration: 'none' }}
+                >
+                  {showPassword2 ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </div>
+            </Form.Group>
 
-                  <style>
-                    {`
-                      .hide-password-reveal::-ms-reveal,
-                      .hide-password-reveal::-ms-clear {
-                        display: none;
-                      }
-                      input[type="password"]::-webkit-contacts-auto-fill-button,
-                      input[type="password"]::-webkit-credentials-auto-fill-button,
-                      input[type="password"]::-webkit-password-toggle {
-                        visibility: hidden;
-                        display: none !important;
-                        pointer-events: none;
-                        height: 0;
-                        width: 0;
-                        margin: 0;
-                      }
-                    `}
-                  </style>
+            <div className="d-grid mb-4">
+              <Button
+                variant="primary"
+                type="submit"
+                size="lg"
+                className="rounded-pill py-3"
+              >
+                Create account
+              </Button>
+            </div>
 
-                  <br />
-                  <div className="d-grid gap-2">
-                    <Button className="btn btn-md btn-success" type="submit">
-                      Register
-                    </Button>
-                  </div>
-                </Form>
-
-                <Row className="py-3">
-                  <Col>
-                    Already have an account?
-                    <Link
-                      to="/login"
-                      style={{ color: "green", textDecoration: "none" }}
-                    >
-                      {" "}
-                      Login.
-                    </Link>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}></Col>
-        </Row>
-      </Container>
-    </>
+            <div className="text-center">
+              <p className="mb-0">
+                Already have an account?{' '}
+                <Link
+                  to={redirect ? `/login?redirect=${redirect}` : '/login'}
+                  className="text-primary text-decoration-none"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
   );
 }
 
