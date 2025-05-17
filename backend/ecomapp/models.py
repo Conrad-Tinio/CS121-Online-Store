@@ -68,7 +68,7 @@ class Products(models.Model):
     tags = models.ManyToManyField(Tag, related_name='products', blank=True, help_text="Select tags to associate with this product")
 
     def __str__(self):
-        return self.productName
+        return self.productName or "New Product"
 
 class DeliveryLocation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
