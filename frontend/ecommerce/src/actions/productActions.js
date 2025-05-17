@@ -12,21 +12,8 @@ export const listProducts = (keyword = '') => async (dispatch) => {
   try {
     dispatch({ type: PRODUCT_LIST_REQUEST });
 
-    // Get all URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const params = new URLSearchParams();
-
-    // Add all parameters to the request
-    urlParams.forEach((value, key) => {
-      if (value) {
-        params.append(key, value);
-      }
-    });
-
-    // Add keyword if provided directly
-    if (keyword) {
-      params.append('keyword', keyword);
-    }
+    // Parse the provided keyword string instead of using window.location.search
+    const params = new URLSearchParams(keyword);
     
     const queryString = params.toString();
     const url = `/api/products/${queryString ? `?${queryString}` : ''}`;

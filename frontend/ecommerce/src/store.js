@@ -30,6 +30,7 @@ const paymentMethodFromStorage = localStorage.getItem('paymentMethod') ?
     JSON.parse(localStorage.getItem('paymentMethod')) : ''
 
 const initialState = {
+    productsList: { products: [] },
     cart: { cartItems: cartItemsFromStorage },
     checkout: {
         shippingAddress: shippingAddressFromStorage,

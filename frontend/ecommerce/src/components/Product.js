@@ -87,7 +87,7 @@ function Product({product}) {
             </div>
 
             <div className="d-flex justify-content-between align-items-center">
-              <span className="price">£{product.price}</span>
+              <span className="price">₱{product.price}</span>
               {product.stockCount > 0 ? (
                 <Badge bg="success" className="stock-badge">
                   In Stock

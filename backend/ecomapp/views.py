@@ -66,17 +66,38 @@ def getProducts(request):
     category = request.GET.get('category', '')
     query = request.GET.get('keyword', '')
     
+    # Get price range filters
+    price_min = request.GET.get('price_min')
+    price_max = request.GET.get('price_max')
+    
     # Get all tag filters from query params
     tag_filters = {}
     for param, value in request.GET.items():
         # Skip non-tag parameters
-        if param in ['arrival', 'category', 'keyword']:
+        if param in ['arrival', 'category', 'keyword', 'price_min', 'price_max']:
             continue
         # Handle tag type filters
         if value:
             tag_filters[param] = value.split(',')
     
     filtered_products = products
+    
+    # Apply price range filter
+    if price_min is not None:
+        try:
+            min_price = float(price_min)
+            filtered_products = filtered_products.filter(price__gte=min_price)
+            print(f"\nFiltering by minimum price: {min_price}")
+        except (ValueError, TypeError):
+            print(f"Invalid minimum price value: {price_min}")
+            
+    if price_max is not None:
+        try:
+            max_price = float(price_max)
+            filtered_products = filtered_products.filter(price__lte=max_price)
+            print(f"\nFiltering by maximum price: {max_price}")
+        except (ValueError, TypeError):
+            print(f"Invalid maximum price value: {price_max}")
     
     # Apply tag filters
     for tag_type, tag_values in tag_filters.items():

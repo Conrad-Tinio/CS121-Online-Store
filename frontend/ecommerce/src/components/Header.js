@@ -26,21 +26,19 @@ function Header() {
   
   // Check if we're on the login or register page
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  
+  // Check if we're on the profile/account page
+  const isProfilePage = location.pathname === '/account';
 
   // Initialize state from URL parameters
   const searchParams = new URLSearchParams(location.search);
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [currentCategory, setCurrentCategory] = useState(searchParams.get('category') || '');
   const [categories, setCategories] = useState([]);
-  const [showFilter, setShowFilter] = useState(false);
   const [expanded, setExpanded] = useState(false);
   
   const userLogin = useSelector(state => state.userLogin);
   const {userInfo} = userLogin;
-
-  // State for tag types
-  const [tagTypes, setTagTypes] = useState([]);
-  const [selectedTags, setSelectedTags] = useState({});
 
   // Get user info and wishlist from Redux store
   const wishlist = useSelector(state => state.wishlist);
@@ -69,41 +67,11 @@ function Header() {
     fetchCategories()
   }, [])
 
-  // Fetch tag types
-  useEffect(() => {
-    const fetchTagTypes = async () => {
-      try {
-        const { data } = await axios.get('/api/tag-types/');
-        setTagTypes(data);
-      } catch (error) {
-        console.error('Error fetching tag types:', error);
-      }
-    };
-    fetchTagTypes();
-  }, []);
-
-  // Update selected tags from URL
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const newSelectedTags = {};
-    tagTypes.forEach(type => {
-      const value = params.get(type.name.toLowerCase());
-      if (value) {
-        // Split comma-separated values into array
-        newSelectedTags[type.name] = value.split(',');
-      } else {
-        newSelectedTags[type.name] = [];
-      }
-    });
-    setSelectedTags(newSelectedTags);
-  }, [location.search, tagTypes]);
-
   const logoutHandler = () => {
     dispatch(logout())
     setExpanded(false);
   }
 
-  // Handle category change
   const handleCategoryChange = (newCategory = '') => {
     console.log('Category changed to:', newCategory);
     setCurrentCategory(newCategory);
@@ -118,44 +86,20 @@ function Header() {
       params.delete('category');
     }
     
-    // Keep other existing filters
-    const searchQuery = params.toString();
+    // Keep search keyword if exists
+    if (keyword.trim()) {
+      params.set('keyword', keyword);
+    }
     
     // Navigate to the new URL
     navigate({
       pathname: '/',
-      search: searchQuery ? `?${searchQuery}` : ''
-    });
-  };
-
-  // Handle tag selection
-  const handleTagSelect = (tagType, tagName) => {
-    setSelectedTags(prev => {
-      const newTags = { ...prev };
-      if (!newTags[tagType]) {
-        newTags[tagType] = [];
-      }
-      
-      const index = newTags[tagType].indexOf(tagName);
-      if (index === -1) {
-        // Add tag if not selected
-        newTags[tagType] = [...newTags[tagType], tagName];
-      } else {
-        // Remove tag if already selected
-        newTags[tagType] = newTags[tagType].filter(t => t !== tagName);
-      }
-      return newTags;
+      search: params.toString() ? `?${params.toString()}` : ''
     });
   };
 
   const submitHandler = (e) => {
     e.preventDefault();
-    console.log('\nSubmitting filters from Header:');
-    console.log('Current state:', {
-      keyword,
-      currentCategory,
-      selectedTags
-    });
     
     // Create a new URLSearchParams object
     const params = new URLSearchParams();
@@ -169,13 +113,6 @@ function Header() {
       params.set('category', currentCategory);
     }
 
-    // Add tag filters
-    Object.entries(selectedTags).forEach(([type, values]) => {
-      if (values.length > 0) {
-        params.set(type.toLowerCase(), values.join(','));
-      }
-    });
-
     const searchQuery = params.toString();
     console.log('Final URL params:', searchQuery);
     
@@ -185,18 +122,7 @@ function Header() {
       search: searchQuery ? `?${searchQuery}` : ''
     });
     
-    // Close modals
-    setShowFilter(false);
     setExpanded(false);
-  };
-
-  const clearFilters = () => {
-    console.log('Clearing all filters');
-    setKeyword('');
-    setCurrentCategory('');
-    setSelectedTags({});
-    navigate('/', { replace: true });
-    setShowFilter(false);
   };
 
   // Close navbar when navigating
@@ -204,81 +130,38 @@ function Header() {
     setExpanded(false);
   };
 
-  // Helper function to check if any filters are active
-  const hasActiveFilters = () => {
-    return Boolean(
-      keyword ||
-      currentCategory ||
-      Object.keys(selectedTags).length > 0
-    );
-  };
-
-  // Helper function to count active filters
-  const getActiveFilterCount = () => {
-    let count = 0;
-    if (keyword) count++;
-    if (currentCategory) count++;
-    count += Object.keys(selectedTags).length;
-    return count;
-  };
-
-  // Helper function to get active filter summary
-  const getActiveFilterSummary = () => {
-    const filters = [];
-    if (keyword) filters.push(`Search: "${keyword}"`);
-    if (currentCategory) filters.push(`Category: ${currentCategory}`);
-    
-    // Add tag filters to summary
-    Object.entries(selectedTags).forEach(([type, values]) => {
-      filters.push(`${type}: ${values.join(', ')}`);
-    });
-
-    return filters;
-  };
-
-  // Render tag type filters
-  const renderTagTypeFilters = () => (
-    <>
-      {tagTypes.map(tagType => (
-        <Form.Group className="mb-3" key={tagType.id}>
-          <Form.Label>{tagType.name}</Form.Label>
-          <div className="d-flex flex-wrap gap-2">
-            {tagType.tags.map(tag => (
-              <Button
-                key={tag.id}
-                variant={selectedTags[tagType.name]?.includes(tag.name) ? tagType.color : 'outline-secondary'}
-                className="d-flex align-items-center"
-                onClick={() => handleTagSelect(tagType.name, tag.name)}
-                type="button"
-              >
-                {tag.name}
-              </Button>
-            ))}
-          </div>
-        </Form.Group>
-      ))}
-    </>
-  );
-
   // Check scroll buttons visibility
   const checkScrollButtons = () => {
     if (categoryContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = categoryContainerRef.current;
       setShowLeftScroll(scrollLeft > 0);
-      setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 1);
+      setShowRightScroll(scrollLeft < scrollWidth - clientWidth);
     }
   };
 
   // Scroll handlers
   const handleScrollLeft = () => {
     if (categoryContainerRef.current) {
-      categoryContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+      const scrollAmount = 200;
+      const container = categoryContainerRef.current;
+      const targetScroll = Math.max(0, container.scrollLeft - scrollAmount);
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
     }
   };
 
   const handleScrollRight = () => {
     if (categoryContainerRef.current) {
-      categoryContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+      const scrollAmount = 200;
+      const container = categoryContainerRef.current;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      const targetScroll = Math.min(maxScroll, container.scrollLeft + scrollAmount);
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -289,10 +172,14 @@ function Header() {
       container.addEventListener('scroll', checkScrollButtons);
       // Initial check
       checkScrollButtons();
+      
+      // Check scroll buttons when window resizes
+      window.addEventListener('resize', checkScrollButtons);
     }
     return () => {
       if (container) {
         container.removeEventListener('scroll', checkScrollButtons);
+        window.removeEventListener('resize', checkScrollButtons);
       }
     };
   }, [categories]);
@@ -328,85 +215,66 @@ function Header() {
       </div>
 
       {/* Main Header */}
-      <Navbar bg="primary" variant="dark" expand="lg" className="py-3">
+      <Navbar bg="primary" variant="dark" expand="lg" expanded={expanded}>
         <Container>
-          <Link to="/" className="navbar-brand d-flex align-items-center">
-            <img 
-              src={logo} 
-              alt="Toy Kingdom Logo" 
-              style={{ 
-                height: '40px', 
-                marginRight: '10px'
-              }} 
+          <Navbar.Brand as={Link} to="/" className="me-4">
+            <img
+              src={logo}
+              height="40"
+              className="d-inline-block align-top"
+              alt="Logo"
             />
-            Toy Kingdom
-          </Link>
+          </Navbar.Brand>
 
-          {!isAuthPage && (
-          <Form onSubmit={submitHandler} className="search-form d-flex mx-lg-4">
-              <div className="position-relative w-100">
-            <Form.Control
-              type="text"
-                  placeholder="Search for product"
-                  className="search-input pe-5"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-                <Button 
-                  type="submit" 
-                  className="search-button position-absolute end-0 top-50 translate-middle-y"
-                  style={{
-                    borderRadius: '0 25px 25px 0',
-                    height: '100%',
-                    padding: '0 1.5rem',
-                    marginRight: '0'
-                  }}
-                >
-                  <FontAwesomeIcon icon={faMagnifyingGlass} />
-            </Button>
+          <Navbar.Toggle 
+            aria-controls="basic-navbar-nav" 
+            onClick={() => setExpanded(!expanded)}
+          />
+
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Form onSubmit={submitHandler} className="d-flex flex-grow-1 mx-lg-4">
+              <div className="position-relative flex-grow-1">
+                <Form.Control
+                  type="text"
+                  placeholder="Search products..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  className="search-input"
+                />
               </div>
-          </Form>
-          )}
+              <Button type="submit" className="search-button ms-2">
+                <FontAwesomeIcon icon={faMagnifyingGlass} />
+              </Button>
+            </Form>
 
-          <div className="d-flex align-items-center">
-            {userInfo && !isAuthPage && (
-              <Link to="/wishlist" className="icon-button position-relative me-3">
-                <FontAwesomeIcon icon={faHeart} size="lg" />
-                {wishlistItems?.length > 0 && (
-                  <span className="badge-counter">{wishlistItems.length}</span>
-                )}
-              </Link>
-            )}
-            {!isAuthPage && (
-            <Link to="/cart" className="icon-button position-relative">
-                <FontAwesomeIcon icon={faCartShopping} size="lg" />
-              <span className="badge-counter">{cartItems?.length || 0}</span>
-            </Link>
-            )}
-          </div>
+            <div className="d-flex align-items-center">
+              {userInfo && !isAuthPage && (
+                <Link to="/wishlist" className="icon-button position-relative me-3">
+                  <FontAwesomeIcon icon={faHeart} size="lg" />
+                  {wishlistItems?.length > 0 && (
+                    <span className="badge-counter">{wishlistItems.length}</span>
+                  )}
+                </Link>
+              )}
+              {!isAuthPage && (
+                <Link to="/cart" className="icon-button position-relative">
+                  <FontAwesomeIcon icon={faCartShopping} size="lg" />
+                  <span className="badge-counter">{cartItems?.length || 0}</span>
+                </Link>
+              )}
+            </div>
+          </Navbar.Collapse>
         </Container>
       </Navbar>
 
-      {/* Category Navigation - Only show if not on auth pages */}
-      {!isAuthPage && (
+      {/* Category Navigation */}
+      {!isAuthPage && !isProfilePage && (
         <nav className="category-nav border-bottom" style={{ backgroundColor: '#e8f4ff' }}>
-          <style>
-            {`
-              .category-button {
-                transition: all 0.2s ease !important;
-              }
-              .category-button:hover {
-                background-color: #0275d8 !important;
-                color: white !important;
-                transform: translateY(-1px) !important;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
-              }
-            `}
-          </style>
-          <Container className="position-relative">
+          <Container className="position-relative d-flex align-items-center">
+            {/* Left scroll button */}
             <Button 
               variant="light" 
-              className="category-scroll-button left"
+              className="category-scroll-button"
               onClick={handleScrollLeft}
               style={{
                 position: 'absolute',
@@ -433,10 +301,11 @@ function Header() {
             >
               <FontAwesomeIcon icon={faChevronLeft} />
             </Button>
-            
+
+            {/* Category buttons */}
             <div 
               ref={categoryContainerRef}
-              className="d-flex category-container"
+              className="d-flex category-container flex-grow-1"
               style={{
                 overflowX: 'hidden',
                 scrollBehavior: 'smooth',
@@ -449,6 +318,7 @@ function Header() {
                   display: 'none'
                 }
               }}
+              onScroll={checkScrollButtons}
             >
               <Button
                 onClick={() => handleCategoryChange('')}
@@ -495,6 +365,7 @@ function Header() {
               ))}
             </div>
 
+            {/* Right scroll button */}
             {showRightScroll && (
               <Button 
                 variant="light" 
@@ -526,73 +397,9 @@ function Header() {
                 <FontAwesomeIcon icon={faChevronRight} />
               </Button>
             )}
-        </Container>
+          </Container>
         </nav>
       )}
-
-      {/* Filter Modal */}
-      <Modal show={showFilter} onHide={() => setShowFilter(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Filter Products</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {/* Active Filters Summary */}
-          {hasActiveFilters() && (
-            <div className="mb-4">
-              <h6 className="mb-2">Active Filters:</h6>
-              <div className="d-flex flex-wrap gap-2">
-                {getActiveFilterSummary().map((filter, index) => (
-                  <Badge
-                    key={index}
-                    bg="info"
-                    className="py-2 px-3"
-                  >
-                    {filter}
-                  </Badge>
-                ))}
-              </div>
-              <small className="text-muted d-block mt-2">
-                * Items must match ALL selected filters to be shown
-              </small>
-            </div>
-          )}
-
-          <Form onSubmit={submitHandler}>
-            <Form.Group className="mb-3">
-              <Form.Label>Category</Form.Label>
-              <Form.Select 
-                value={currentCategory} 
-                onChange={(e) => {
-                  const newCategory = e.target.value;
-                  handleCategoryChange(newCategory);
-                }}
-              >
-                <option value="">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat._id} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            {/* Tag Type Filters */}
-            {renderTagTypeFilters()}
-
-            <div className="d-flex justify-content-end gap-2 mt-4">
-              <Button variant="secondary" onClick={() => setShowFilter(false)}>
-                Close
-              </Button>
-              <Button variant="danger" onClick={clearFilters}>
-                Clear All Filters
-              </Button>
-              <Button variant="primary" onClick={submitHandler}>
-                Apply Filters
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
     </>
   );
 }

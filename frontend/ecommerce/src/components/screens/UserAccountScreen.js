@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShoppingBag } from '@fortawesome/free-solid-svg-icons';
+import { faShoppingBag, faHome } from '@fortawesome/free-solid-svg-icons';
 
 function UserAccountScreen() {
     const userLogin = useSelector(state => state.userLogin);
@@ -227,6 +227,17 @@ function UserAccountScreen() {
         <Container className="py-5">
             <Row className="justify-content-center">
                 <Col md={8}>
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <h2 className="mb-0">My Account</h2>
+                        <Button 
+                            variant="outline-primary"
+                            onClick={() => navigate('/')}
+                            className="d-flex align-items-center gap-2"
+                        >
+                            <FontAwesomeIcon icon={faHome} />
+                            Back to Home
+                        </Button>
+                    </div>
                     <Card>
                         <Card.Header className="bg-primary">
                             <Nav variant="tabs" className="nav-tabs-custom">
