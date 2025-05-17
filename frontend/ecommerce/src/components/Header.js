@@ -64,7 +64,10 @@ function Header() {
     tagTypes.forEach(type => {
       const value = params.get(type.name.toLowerCase());
       if (value) {
-        newSelectedTags[type.name] = value;
+        // Split comma-separated values into array
+        newSelectedTags[type.name] = value.split(',');
+      } else {
+        newSelectedTags[type.name] = [];
       }
     });
     setSelectedTags(newSelectedTags);
@@ -104,10 +107,17 @@ function Header() {
   const handleTagSelect = (tagType, tagName) => {
     setSelectedTags(prev => {
       const newTags = { ...prev };
-      if (newTags[tagType] === tagName) {
-        delete newTags[tagType];
+      if (!newTags[tagType]) {
+        newTags[tagType] = [];
+      }
+      
+      const index = newTags[tagType].indexOf(tagName);
+      if (index === -1) {
+        // Add tag if not selected
+        newTags[tagType] = [...newTags[tagType], tagName];
       } else {
-        newTags[tagType] = tagName;
+        // Remove tag if already selected
+        newTags[tagType] = newTags[tagType].filter(t => t !== tagName);
       }
       return newTags;
     });
@@ -135,8 +145,10 @@ function Header() {
     }
 
     // Add tag filters
-    Object.entries(selectedTags).forEach(([type, value]) => {
-      params.set(type.toLowerCase(), value);
+    Object.entries(selectedTags).forEach(([type, values]) => {
+      if (values.length > 0) {
+        params.set(type.toLowerCase(), values.join(','));
+      }
     });
 
     const searchQuery = params.toString();
@@ -192,8 +204,8 @@ function Header() {
     if (category) filters.push(`Category: ${category}`);
     
     // Add tag filters to summary
-    Object.entries(selectedTags).forEach(([type, value]) => {
-      filters.push(`${type}: ${value}`);
+    Object.entries(selectedTags).forEach(([type, values]) => {
+      filters.push(`${type}: ${values.join(', ')}`);
     });
 
     return filters;
@@ -209,7 +221,7 @@ function Header() {
             {tagType.tags.map(tag => (
               <Button
                 key={tag.id}
-                variant={selectedTags[tagType.name] === tag.name ? tagType.color : 'outline-secondary'}
+                variant={selectedTags[tagType.name]?.includes(tag.name) ? tagType.color : 'outline-secondary'}
                 className="d-flex align-items-center"
                 onClick={() => handleTagSelect(tagType.name, tag.name)}
                 type="button"

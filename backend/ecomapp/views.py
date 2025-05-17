@@ -74,25 +74,27 @@ def getProducts(request):
             continue
         # Handle tag type filters
         if value:
-            tag_filters[param] = value
+            tag_filters[param] = value.split(',')
     
     filtered_products = products
     
     # Apply tag filters
-    for tag_type, tag_value in tag_filters.items():
-        print(f"\nFiltering by tag - {tag_type}: {tag_value}")
-        filtered_products = filtered_products.filter(
-            tags__tag_type__name__iexact=tag_type,
-            tags__name__iexact=tag_value
-        ).distinct()
+    for tag_type, tag_values in tag_filters.items():
+        print(f"\nFiltering by tag - {tag_type}: {tag_values}")
+        # Create a Q object for each tag value in this type
+        tag_q = Q()
+        for tag_value in tag_values:
+            tag_q |= Q(tags__tag_type__name__iexact=tag_type, tags__name__iexact=tag_value)
+        filtered_products = filtered_products.filter(tag_q).distinct()
     
     # Handle arrival status separately since it's a special case
     if arrival_status:
         print(f"\nFiltering by arrival status: {arrival_status}")
-        filtered_products = filtered_products.filter(
-            tags__name__iexact=arrival_status.title(),
-            tags__tag_type__name='Arrival'
-        ).distinct()
+        arrival_values = arrival_status.split(',')
+        arrival_q = Q()
+        for value in arrival_values:
+            arrival_q |= Q(tags__name__iexact=value.title(), tags__tag_type__name='Arrival')
+        filtered_products = filtered_products.filter(arrival_q).distinct()
     
     if category:
         print(f"\nFiltering by category: {category}")
