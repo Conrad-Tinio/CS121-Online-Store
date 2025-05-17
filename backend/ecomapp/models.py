@@ -12,34 +12,52 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-class Tag(models.Model):
+class TagType(models.Model):
+    COLOR_CHOICES = [
+        ('primary', 'Blue'),
+        ('danger', 'Red'),
+        ('warning', 'Yellow'),
+        ('dark', 'Black'),
+    ]
+
     name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(null=True, blank=True)
+    color = models.CharField(
+        max_length=20,
+        choices=COLOR_CHOICES,
+        default='primary',
+        help_text='Choose the display color for this tag type'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Tag Type'
+        verbose_name_plural = 'Tag Types'
 
     def __str__(self):
         return self.name
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50)
+    tag_type = models.ForeignKey(TagType, on_delete=models.CASCADE, related_name='tags', null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['tag_type__name', 'name']
+        unique_together = ['name', 'tag_type']  # Ensure tag names are unique within their type
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
+
+    def __str__(self):
+        return f"{self.tag_type.name if self.tag_type else 'Uncategorized'}: {self.name}"
+
 class Products(models.Model):
-    ARRIVAL_CHOICES = [
-        ('new', 'New Arrivals'),
-        ('recent', 'Recent'),
-        ('classic', 'Classic'),
-    ]
-    
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     productName = models.CharField(max_length=200, null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     image = models.ImageField(null=True, blank=True)
     productBrand = models.CharField(max_length=100, null=True, blank=True)
-    arrival_status = models.CharField(
-        max_length=10,
-        choices=ARRIVAL_CHOICES,
-        default='classic',
-        db_index=True  # Add index for better query performance
-    )
     productInfo = models.TextField(null=True, blank=True)
     rating = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     numReviews = models.IntegerField(null=True, blank=True, default=0)
@@ -47,16 +65,10 @@ class Products(models.Model):
     stockCount = models.IntegerField(null=True, blank=True, default=0)
     createdAt = models.DateTimeField(auto_now_add=True)
     _id = models.AutoField(primary_key=True, editable=False)
-    tags = models.ManyToManyField(Tag, related_name='products', blank=True)
+    tags = models.ManyToManyField(Tag, related_name='products', blank=True, help_text="Select tags to associate with this product")
 
     def __str__(self):
         return self.productName
-
-    def save(self, *args, **kwargs):
-        # Ensure arrival_status is always a valid choice
-        if self.arrival_status not in [choice[0] for choice in self.ARRIVAL_CHOICES]:
-            self.arrival_status = 'classic'
-        super().save(*args, **kwargs)
 
 class DeliveryLocation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -18,19 +18,10 @@ function HomeScreen() {
     const searchParams = new URLSearchParams(location.search)
     const currentCategory = searchParams.get('category') || ''
 
-    // Fetch products based on filters
+    // Fetch products based on URL parameters
     useEffect(() => {
         const keyword = searchParams.get('keyword') || ''
-        const category = searchParams.get('category') || ''
-        const arrival = searchParams.get('arrival') || ''
-        
-        console.log('Current filters:', {
-            keyword,
-            category,
-            arrival
-        })
-        
-        dispatch(listProducts(keyword, category, arrival))
+        dispatch(listProducts(keyword))
     }, [dispatch, location.search])
 
     return (

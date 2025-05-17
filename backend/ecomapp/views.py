@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 
 # from .products import products
-from .models import Products, Category, Order, OrderItem, DeliveryLocation, Wishlist
+from .models import Products, Category, Order, OrderItem, DeliveryLocation, Wishlist, TagType, Tag
 from .serializers import ProductsSerializer, UserSerializer, UserSerializerWithToken, CategorySerializer, OrderSerializer, DeliveryLocationSerializer, WishlistSerializer
 
 # for sending mails and generate token
@@ -46,55 +46,78 @@ def getRoutes(request):
 
 @api_view(['GET'])
 def getProducts(request):
-    # Print raw request data for debugging
-    print("\nDEBUG - Raw request data:")
+    print("\n=== Starting getProducts request ===")
     print("URL:", request.build_absolute_uri())
     print("Query params:", dict(request.GET))
-    print("Headers:", dict(request.headers))
     
-    query = request.GET.get('keyword', '')
-    category = request.GET.get('category', '')
+    # Start with all products and prefetch related tags
+    products = Products.objects.prefetch_related('tags', 'tags__tag_type').all()
+    
+    print("\n=== Initial Products and Their Tags ===")
+    for product in products:
+        print(f"\nProduct: {product.productName} (ID: {product._id})")
+        tags = list(product.tags.select_related('tag_type').all())
+        print(f"Number of tags: {len(tags)}")
+        for tag in tags:
+            print(f"- {tag.tag_type.name if tag.tag_type else 'No type'}: {tag.name}")
+    
+    # Apply filters
     arrival_status = request.GET.get('arrival', '')
+    category = request.GET.get('category', '')
+    query = request.GET.get('keyword', '')
     
-    print(f"\n{'='*50}")
-    print("Processing product filter request")
-    print(f"{'='*50}")
-    print("\nReceived filter parameters:")
-    print(f"- Category: '{category}'")
-    print(f"- Arrival status: '{arrival_status}'")
-    print(f"- Search query: '{query}'")
+    # Get all tag filters from query params
+    tag_filters = {}
+    for param, value in request.GET.items():
+        # Skip non-tag parameters
+        if param in ['arrival', 'category', 'keyword']:
+            continue
+        # Handle tag type filters
+        if value:
+            tag_filters[param] = value
     
-    # Start with all products
-    products = Products.objects.all()
-    print("\nInitial product count:", products.count())
+    filtered_products = products
     
-    # Add arrival status filter first
+    # Apply tag filters
+    for tag_type, tag_value in tag_filters.items():
+        print(f"\nFiltering by tag - {tag_type}: {tag_value}")
+        filtered_products = filtered_products.filter(
+            tags__tag_type__name__iexact=tag_type,
+            tags__name__iexact=tag_value
+        ).distinct()
+    
+    # Handle arrival status separately since it's a special case
     if arrival_status:
-        print(f"\nApplying arrival status filter: '{arrival_status}'")
-        products = products.filter(arrival_status__exact=arrival_status)
-        print(f"Product count after arrival filter: {products.count()}")
-        print("Filtered products:")
-        for p in products:
-            print(f"- {p.productName} (arrival_status='{p.arrival_status}')")
+        print(f"\nFiltering by arrival status: {arrival_status}")
+        filtered_products = filtered_products.filter(
+            tags__name__iexact=arrival_status.title(),
+            tags__tag_type__name='Arrival'
+        ).distinct()
     
-    # Add category filter
     if category:
-        print(f"\nApplying category filter: '{category}'")
-        products = products.filter(category__name__iexact=category)
-        print(f"Product count after category filter: {products.count()}")
+        print(f"\nFiltering by category: {category}")
+        filtered_products = filtered_products.filter(
+            category__name__iexact=category
+        ).distinct()
     
-    # Add search query filter
     if query:
-        print(f"\nApplying search filter: '{query}'")
-        products = products.filter(productName__icontains=query)
-        print(f"Product count after search filter: {products.count()}")
+        print(f"\nFiltering by search query: {query}")
+        filtered_products = filtered_products.filter(
+            productName__icontains=query
+        ).distinct()
     
-    # Order by name
-    products = products.order_by('productName')
+    # Final result
+    filtered_products = filtered_products.order_by('productName')
     
-    serializer = ProductsSerializer(products, many=True)
-    print(f"\nFinal product count: {len(serializer.data)}")
+    print("\n=== Final Products and Their Tags ===")
+    for product in filtered_products:
+        print(f"\nProduct: {product.productName}")
+        tags = list(product.tags.select_related('tag_type').all())
+        print(f"Number of tags: {len(tags)}")
+        for tag in tags:
+            print(f"- {tag.tag_type.name if tag.tag_type else 'No type'}: {tag.name}")
     
+    serializer = ProductsSerializer(filtered_products, many=True)
     return Response(serializer.data)
 
 
@@ -410,3 +433,22 @@ def get_order_details(request, pk):
         return Response(serializer.data)
     except Order.DoesNotExist:
         return Response({'detail': 'Order not found'}, status=404)   
+
+@api_view(['GET'])
+def get_tag_types(request):
+    """Get all tag types and their associated tags"""
+    tag_types = TagType.objects.prefetch_related('tags').all()
+    
+    # Format the response
+    response_data = []
+    for tag_type in tag_types:
+        type_data = {
+            'id': tag_type.id,
+            'name': tag_type.name,
+            'color': tag_type.color,
+            'description': tag_type.description,
+            'tags': [{'id': tag.id, 'name': tag.name} for tag in tag_type.tags.all()]
+        }
+        response_data.append(type_data)
+    
+    return Response(response_data)   

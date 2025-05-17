@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/sales-stats/', views.get_sales_stats, name='sales-stats'),
     path('wishlist/', views.wishlist_operations, name='wishlist'),
     path('wishlist/<str:pk>/', views.wishlist_operations, name='wishlist-item'),
+    path('tag-types/', views.get_tag_types, name='tag-types'),
 ]

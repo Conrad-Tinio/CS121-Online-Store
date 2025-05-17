@@ -22,25 +22,18 @@ function Header() {
   const [showFilter, setShowFilter] = useState(false);
   const [expanded, setExpanded] = useState(false);
   
-  // New state for arrival status
-  const [arrivalStatus, setArrivalStatus] = useState(searchParams.get('arrival') || '');
-
-  // Arrival status options
-  const arrivalOptions = [
-    { value: 'new', text: 'New Arrivals', variant: 'success', icon: '🆕' },
-    { value: 'recent', text: 'Recent', variant: 'info', icon: '📅' },
-    { value: 'classic', text: 'Classic', variant: 'dark', icon: '⭐' },
-  ];
-
   const userLogin = useSelector(state => state.userLogin);
   const {userInfo} = userLogin;
+
+  // State for tag types
+  const [tagTypes, setTagTypes] = useState([]);
+  const [selectedTags, setSelectedTags] = useState({});
 
   // Update state when URL changes
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     setKeyword(params.get('keyword') || '');
     setCategory(params.get('category') || '');
-    setArrivalStatus(params.get('arrival') || '');
   }, [location.search]);
 
   useEffect(() => {
@@ -50,6 +43,32 @@ function Header() {
     }
     fetchCategories()
   }, [])
+
+  // Fetch tag types
+  useEffect(() => {
+    const fetchTagTypes = async () => {
+      try {
+        const { data } = await axios.get('/api/tag-types/');
+        setTagTypes(data);
+      } catch (error) {
+        console.error('Error fetching tag types:', error);
+      }
+    };
+    fetchTagTypes();
+  }, []);
+
+  // Update selected tags from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const newSelectedTags = {};
+    tagTypes.forEach(type => {
+      const value = params.get(type.name.toLowerCase());
+      if (value) {
+        newSelectedTags[type.name] = value;
+      }
+    });
+    setSelectedTags(newSelectedTags);
+  }, [location.search, tagTypes]);
 
   const logoutHandler = () => {
     dispatch(logout())
@@ -81,13 +100,17 @@ function Header() {
     });
   };
 
-  // Handle arrival status click - only update local state, don't navigate
-  const handleArrivalClick = (value) => {
-    console.log('Arrival status clicked:', value);
-    // Toggle the arrival status
-    const newStatus = value === arrivalStatus ? '' : value;
-    console.log('Setting new arrival status:', newStatus);
-    setArrivalStatus(newStatus);
+  // Handle tag selection
+  const handleTagSelect = (tagType, tagName) => {
+    setSelectedTags(prev => {
+      const newTags = { ...prev };
+      if (newTags[tagType] === tagName) {
+        delete newTags[tagType];
+      } else {
+        newTags[tagType] = tagName;
+      }
+      return newTags;
+    });
   };
 
   const submitHandler = (e) => {
@@ -96,7 +119,7 @@ function Header() {
     console.log('Current state:', {
       keyword,
       category,
-      arrivalStatus
+      selectedTags
     });
     
     // Create a new URLSearchParams object
@@ -110,11 +133,11 @@ function Header() {
     if (category) {
       params.set('category', category);
     }
-    
-    if (arrivalStatus) {
-      params.set('arrival', arrivalStatus);
-      console.log('Setting arrival status:', arrivalStatus);
-    }
+
+    // Add tag filters
+    Object.entries(selectedTags).forEach(([type, value]) => {
+      params.set(type.toLowerCase(), value);
+    });
 
     const searchQuery = params.toString();
     console.log('Final URL params:', searchQuery);
@@ -134,7 +157,7 @@ function Header() {
     console.log('Clearing all filters');
     setKeyword('');
     setCategory('');
-    setArrivalStatus('');
+    setSelectedTags({});
     navigate('/', { replace: true });
     setShowFilter(false);
   };
@@ -149,7 +172,7 @@ function Header() {
     return Boolean(
       keyword ||
       category ||
-      arrivalStatus
+      Object.keys(selectedTags).length > 0
     );
   };
 
@@ -158,7 +181,7 @@ function Header() {
     let count = 0;
     if (keyword) count++;
     if (category) count++;
-    if (arrivalStatus) count++;
+    count += Object.keys(selectedTags).length;
     return count;
   };
 
@@ -168,35 +191,36 @@ function Header() {
     if (keyword) filters.push(`Search: "${keyword}"`);
     if (category) filters.push(`Category: ${category}`);
     
-    if (arrivalStatus) {
-      const arrivalOption = arrivalOptions.find(opt => opt.value === arrivalStatus);
-      filters.push(`Arrival: ${arrivalOption.text}`);
-    }
+    // Add tag filters to summary
+    Object.entries(selectedTags).forEach(([type, value]) => {
+      filters.push(`${type}: ${value}`);
+    });
+
     return filters;
   };
 
-  // Render arrival status options
-  const renderArrivalOptions = () => (
-    <div className="d-flex flex-wrap gap-2">
-      {arrivalOptions.map(option => (
-        <button
-          key={option.value}
-          type="button"
-          className={`badge bg-${arrivalStatus === option.value ? option.variant : 'secondary'}`}
-          style={{
-            cursor: 'pointer',
-            opacity: arrivalStatus === option.value ? 1 : 0.7,
-            padding: '8px 12px',
-            fontSize: '0.9rem',
-            border: 'none',
-          }}
-          onClick={() => handleArrivalClick(option.value)}
-        >
-          <span className="me-1">{option.icon}</span>
-          {option.text}
-        </button>
+  // Render tag type filters
+  const renderTagTypeFilters = () => (
+    <>
+      {tagTypes.map(tagType => (
+        <Form.Group className="mb-3" key={tagType.id}>
+          <Form.Label>{tagType.name}</Form.Label>
+          <div className="d-flex flex-wrap gap-2">
+            {tagType.tags.map(tag => (
+              <Button
+                key={tag.id}
+                variant={selectedTags[tagType.name] === tag.name ? tagType.color : 'outline-secondary'}
+                className="d-flex align-items-center"
+                onClick={() => handleTagSelect(tagType.name, tag.name)}
+                type="button"
+              >
+                {tag.name}
+              </Button>
+            ))}
+          </div>
+        </Form.Group>
       ))}
-    </div>
+    </>
   );
 
   return (
@@ -473,24 +497,8 @@ function Header() {
               </Form.Select>
             </Form.Group>
 
-            {/* Arrival Status Filter */}
-            <Form.Group className="mb-3">
-              <Form.Label>Arrival Status</Form.Label>
-              <div className="d-flex flex-wrap gap-2">
-                {arrivalOptions.map(option => (
-                  <Button
-                    key={option.value}
-                    variant={arrivalStatus === option.value ? option.variant : 'outline-secondary'}
-                    className="d-flex align-items-center"
-                    onClick={() => handleArrivalClick(option.value)}
-                    type="button"
-                  >
-                    <span className="me-1">{option.icon}</span>
-                    {option.text}
-                  </Button>
-                ))}
-              </div>
-            </Form.Group>
+            {/* Tag Type Filters */}
+            {renderTagTypeFilters()}
 
             <div className="d-flex justify-content-end gap-2 mt-4">
               <Button variant="secondary" onClick={() => setShowFilter(false)}>

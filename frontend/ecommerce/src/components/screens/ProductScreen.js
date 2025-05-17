@@ -34,22 +34,50 @@ function ProductScreen({ params }) {
   const { wishlistItems, loading: wishlistLoading, error: wishlistError } = wishlist;
 
   const handleTagClick = (filterType, value) => {
+    if (!filterType || !value) return;
     console.log('Applying filter:', filterType, value);
     const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set(filterType, value);
+    
+    // Handle arrival status tags differently
+    if (filterType.toLowerCase() === 'arrival status') {
+      searchParams.set('arrival', value.toLowerCase());
+    } else {
+      searchParams.set(filterType.toLowerCase(), value);
+    }
+    
     const finalUrl = `/?${searchParams.toString()}`;
     navigate(finalUrl);
   };
 
-  const getArrivalTag = (arrivalStatus) => {
-    switch (arrivalStatus) {
-      case 'new':
-        return { text: 'New Arrivals', variant: 'success', icon: '🆕' };
-      case 'recent':
-        return { text: 'Recent', variant: 'info', icon: '📅' };
-      default:
-        return { text: 'Classic', variant: 'dark', icon: '⭐' };
-    }
+  const renderTags = (tags) => {
+    if (!tags || !Array.isArray(tags) || tags.length === 0) return null;
+    
+    return (
+      <div className="d-flex flex-wrap gap-2">
+        {tags.map((tag, index) => {
+          if (!tag.tag_type || !tag.name) return null;
+
+          return (
+            <span 
+              key={index}
+              onClick={() => handleTagClick(tag.tag_type, tag.name)}
+              className={`badge bg-${tag.color || 'secondary'} d-flex align-items-center`}
+              style={{ 
+                padding: '8px 12px', 
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                opacity: 0.9
+              }}
+              onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
+            >
+              {tag.tag_type}: {tag.name}
+            </span>
+          );
+        })}
+      </div>
+    );
   };
 
   // Check if product is in wishlist
@@ -167,28 +195,7 @@ function ProductScreen({ params }) {
                     <ListGroup.Item>
                       <h3 className="mb-3">{product.productName}</h3>
                       <div className="d-flex flex-wrap gap-2" style={{ margin: '-2px' }}>
-                        {/* Arrival Status Tag */}
-                        {(() => {
-                          const arrivalTag = getArrivalTag(product.arrival_status);
-                          return (
-                            <span 
-                              onClick={() => handleTagClick('arrival', product.arrival_status)}
-                              className={`badge bg-${arrivalTag.variant} d-flex align-items-center`}
-                              style={{ 
-                                padding: '8px 12px', 
-                                fontSize: '0.9rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                opacity: 0.9
-                              }}
-                              onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
-                              onMouseOut={(e) => e.currentTarget.style.opacity = '0.9'}
-                            >
-                              <span className="me-1">{arrivalTag.icon}</span>
-                              {arrivalTag.text}
-                            </span>
-                          );
-                        })()}
+                        {renderTags(product.tags)}
 
                         {/* Wishlist Tag */}
                         {isInWishlist && (

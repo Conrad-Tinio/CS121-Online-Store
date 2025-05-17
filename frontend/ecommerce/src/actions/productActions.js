@@ -8,30 +8,37 @@ import {
   PRODUCT_DETAILS_FAIL
 } from "../constants/productConstants";
 
-export const listProducts = (keyword = '', category = '', arrival = '') => async (dispatch) => {
+export const listProducts = (keyword = '') => async (dispatch) => {
   try {
     dispatch({ type: PRODUCT_LIST_REQUEST });
 
-    // Build the URL with correct query parameters
+    // Get all URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
     const params = new URLSearchParams();
-    if (keyword) params.append('keyword', keyword);
-    if (category) params.append('category', category);
-    if (arrival) params.append('arrival', arrival);
+
+    // Add all parameters to the request
+    urlParams.forEach((value, key) => {
+      if (value) {
+        params.append(key, value);
+      }
+    });
+
+    // Add keyword if provided directly
+    if (keyword) {
+      params.append('keyword', keyword);
+    }
     
     const queryString = params.toString();
     const url = `/api/products/${queryString ? `?${queryString}` : ''}`;
     
     console.log('\nProduct Action - Making API request:');
-    console.log('Parameters received:', { keyword, category, arrival });
+    console.log('URL parameters:', Object.fromEntries(params));
     console.log('URL being called:', url);
     
     const { data } = await axios.get(url);
     
     console.log('\nProduct Action - Received API response:');
     console.log('Total products:', data.length);
-    data.forEach(product => {
-      console.log(`- ${product.productName}: arrival_status='${product.arrival_status}'`);
-    });
     
     dispatch({
       type: PRODUCT_LIST_SUCCESS,

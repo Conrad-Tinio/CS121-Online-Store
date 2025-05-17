@@ -11,11 +11,41 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductsSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
+    tags = serializers.SerializerMethodField()
+    arrival_status = serializers.SerializerMethodField()
     
     class Meta:
         model = Products
-        fields = ['_id', 'user', 'productName', 'category', 'image', 'productBrand', 'arrival_status',
-                 'productInfo', 'rating', 'numReviews', 'price', 'stockCount', 'createdAt', 'tags']
+        fields = ['_id', 'user', 'productName', 'category', 'image', 'productBrand',
+                'productInfo', 'rating', 'numReviews', 'price', 'stockCount', 'createdAt', 'tags', 'arrival_status']
+
+    def get_tags(self, obj):
+        # Debug print
+        print(f"\nDebug - get_tags for {obj.productName}:")
+        all_tags = obj.tags.select_related('tag_type').all()
+        print(f"Raw query: {all_tags.query}")
+        print(f"Number of tags: {all_tags.count()}")
+        
+        # Get all tags with their types and colors
+        tags_data = []
+        for tag in all_tags:
+            tag_data = {
+                'id': tag.id,
+                'name': tag.name,
+                'tag_type': tag.tag_type.name if tag.tag_type else 'Uncategorized',
+                'color': tag.tag_type.color if tag.tag_type else 'secondary'
+            }
+            tags_data.append(tag_data)
+            print(f"Added tag: {tag_data}")
+        
+        return tags_data
+
+    def get_arrival_status(self, obj):
+        # Get arrival tag if it exists
+        arrival_tag = obj.tags.filter(tag_type__name='Arrival').first()
+        if arrival_tag:
+            return arrival_tag.name.lower()  # Convert 'New' to 'new', etc.
+        return 'classic'  # Default value if no arrival tag is found
 
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField(read_only=True)

@@ -4,15 +4,30 @@ import { Link } from 'react-router-dom'
 import Rating from './Rating'
 
 function Product({product}) {
-  const getArrivalBadge = (status) => {
-    switch (status) {
-      case 'new':
-        return <Badge bg="success">🆕 New Arrival</Badge>
-      case 'recent':
-        return <Badge bg="info">📅 Recent</Badge>
-      default:
-        return <Badge bg="dark">⭐ Classic</Badge>
-    }
+  const renderTags = (tags) => {
+    if (!tags || !Array.isArray(tags) || tags.length === 0) return null;
+    
+    return (
+      <div className="d-flex flex-wrap gap-2 mb-2">
+        {tags.map((tag, index) => {
+          if (!tag.tag_type || !tag.name) return null;
+
+          return (
+            <Badge 
+              key={index} 
+              bg={tag.color || 'secondary'}
+              className="me-1"
+              style={{
+                padding: '0.4rem 0.8rem',
+                fontSize: '0.85rem'
+              }}
+            >
+              {tag.tag_type}: {tag.name}
+            </Badge>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
@@ -29,9 +44,7 @@ function Product({product}) {
             </Link>
 
             <Card.Text as="div">
-                <div className="my-2">
-                    {getArrivalBadge(product.arrival_status)}
-                </div>
+                {renderTags(product.tags)}
             </Card.Text>
 
             <Card.Text as="div">

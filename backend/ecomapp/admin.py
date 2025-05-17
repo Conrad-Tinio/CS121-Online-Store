@@ -2,8 +2,52 @@ from django.contrib import admin
 from django.db.models import Sum, Count
 from django.utils import timezone
 from datetime import timedelta
-from django.utils.html import format_html
-from .models import Products, Category, Order, OrderItem
+from django.utils.html import format_html, mark_safe
+from .models import Products, Category, Order, OrderItem, TagType, Tag
+
+@admin.register(TagType)
+class TagTypeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'color_badge', 'description', 'created_at', 'get_tags_count']
+    search_fields = ['name', 'description']
+    ordering = ['name']
+    list_filter = ['color']
+
+    def color_badge(self, obj):
+        return format_html(
+            '<span class="badge bg-{}" style="padding: 8px;">{}</span>',
+            obj.color,
+            dict(obj.COLOR_CHOICES)[obj.color]
+        )
+    color_badge.short_description = 'Color'
+
+    def get_tags_count(self, obj):
+        return obj.tags.count()
+    get_tags_count.short_description = 'Number of Tags'
+
+    class Media:
+        css = {
+            'all': [
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css',
+            ]
+        }
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ['name', 'tag_type', 'created_at', 'get_products_count']
+    list_filter = ['tag_type']
+    search_fields = ['name', 'tag_type__name']
+    ordering = ['tag_type__name', 'name']
+    autocomplete_fields = ['tag_type']
+    list_select_related = ['tag_type']
+
+    def get_products_count(self, obj):
+        return obj.products.count()
+    get_products_count.short_description = 'Used in Products'
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "tag_type":
+            kwargs["queryset"] = TagType.objects.order_by('name')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -13,16 +57,50 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Products)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['productName', 'category', 'price', 'stockCount', 'rating', 'arrival_status']
-    list_filter = ['category', 'createdAt', 'arrival_status']
+    list_display = ['productName', 'category', 'price', 'stockCount', 'rating', 'get_tags']
+    list_filter = ['category', 'createdAt', 'tags__tag_type']
     search_fields = ['productName', 'description']
     ordering = ['productName']
+    filter_horizontal = ['tags']
+    readonly_fields = ['get_tags_display']
+    fieldsets = [
+        (None, {
+            'fields': ['productName', 'category', 'image', 'productBrand', 'productInfo']
+        }),
+        ('Product Details', {
+            'fields': ['price', 'stockCount', 'rating', 'numReviews']
+        }),
+        ('Tags', {
+            'fields': ['tags', 'get_tags_display'],
+            'description': 'Select tags for this product. You can select multiple tags by holding Ctrl/Cmd.'
+        })
+    ]
 
     def formatted_price(self, obj):
         if obj.price is None:
             return '-'
         return format_html('₱{:,.2f}', obj.price)
     formatted_price.short_description = 'Price'
+
+    def get_tags(self, obj):
+        tags = obj.tags.select_related('tag_type').all()
+        return ", ".join([f"{tag.tag_type.name}: {tag.name}" for tag in tags]) or "No tags"
+    get_tags.short_description = 'Tags'
+
+    def get_tags_display(self, obj):
+        tags = obj.tags.select_related('tag_type').all()
+        if not tags:
+            return "No tags assigned"
+        html = "<ul>"
+        for tag_type in TagType.objects.all():
+            type_tags = [tag for tag in tags if tag.tag_type == tag_type]
+            if type_tags:
+                html += f"<li><strong>{tag_type.name}:</strong> "
+                html += ", ".join([tag.name for tag in type_tags])
+                html += "</li>"
+        html += "</ul>"
+        return mark_safe(html)
+    get_tags_display.short_description = 'Current Tags'
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
