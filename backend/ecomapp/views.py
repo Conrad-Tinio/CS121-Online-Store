@@ -208,6 +208,7 @@ def registerUser(request):
         )
         # print(message)
         email_message=EmailMessage(email_subject,message,settings.EMAIL_HOST_USER,[data['email']])
+        email_message.content_subtype = "html"  # Set the content type as HTML
         EmailThread(email_message).start()
         # serialize=UserSerializerWithToken(user,many=False)
         message={'details': "Please check your email to activate your account."} 

@@ -14,6 +14,7 @@ import Loader from "../Loader";
 import Message from "../Message";
 import { validEmail } from "./Regex";
 import { register } from "../../actions/userActions";
+import { USER_REGISTER_RESET } from "../../constants/userConstants";
 import logo from '../../logo/Toy_Logo.png';
 
 function SignupScreen() {
@@ -34,6 +35,12 @@ function SignupScreen() {
   const { loading, error, userInfo } = userSignup;
 
   useEffect(() => {
+    return () => {
+      dispatch({ type: USER_REGISTER_RESET });
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
     if (userInfo && userInfo.details === "Please check your email to activate your account.") {
       navigate("/login");
     }
@@ -42,14 +49,6 @@ function SignupScreen() {
       setMessage(error);
     }
   }, [userInfo, error, navigate]);
-
-  useEffect(() => {
-    const activateAccount = localStorage.getItem('activateMessage');
-    if (activateAccount) {
-      setMessage(activateAccount);
-      localStorage.removeItem('activateMessage');
-    }
-  }, []);
 
   const submitHandler = (e) => {
     e.preventDefault()

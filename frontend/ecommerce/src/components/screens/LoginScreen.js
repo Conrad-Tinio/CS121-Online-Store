@@ -13,6 +13,7 @@ function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [activationMessage, setActivationMessage] = useState("");
 
   const dispatch = useDispatch();
   const userLogin = useSelector(state => state.userLogin);
@@ -22,7 +23,18 @@ function LoginScreen() {
   const redirect = location.search ? location.search.split('=')[1] : '/';
   
   useEffect(() => {
+    // Check for activation message in localStorage
+    const message = localStorage.getItem('activateMessage');
+    if (message) {
+      setActivationMessage(message);
+      // Don't remove the message yet to keep it visible if user refreshes
+    }
+  }, []);
+  
+  useEffect(() => {
     if (userInfo) {
+      // Clear activation message when user logs in
+      localStorage.removeItem('activateMessage');
       navigate(redirect);
     }
   }, [userInfo, redirect, navigate]);
@@ -58,6 +70,7 @@ function LoginScreen() {
             </p>
           </div>
 
+          {activationMessage && <Message variant='success'>{activationMessage}</Message>}
           {error && <Message variant='danger'>{error}</Message>}
           {loading && <Loader />}
           

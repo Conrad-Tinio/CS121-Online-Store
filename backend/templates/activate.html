@@ -1,8 +1,135 @@
 {% autoescape off %}
-
-Hi {{user.username}}! Welcome to our app. 
-Please Click This Link below to verify your account
-
-http://{{domain}}{% url 'activate' uidb64=uid token=token %}
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate Your Account - Toy Kingdom</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background-color: #0275d8;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: normal;
+        }
+        
+        .content {
+            padding: 30px;
+            text-align: left;
+        }
+        
+        p {
+            color: #212529;
+            margin-bottom: 20px;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #0275d8;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: normal;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .note {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .link {
+            color: #0275d8;
+            word-break: break-all;
+        }
+        
+        .expiry {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        
+        .signature {
+            margin-top: 30px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Toy Kingdom</div>
+            <h1>Welcome to Toy Kingdom!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{user.username}},</p>
+            
+            <p>Thank you for registering with Toy Kingdom! We're excited to have you join our community of toy enthusiasts.</p>
+            
+            <p>To complete your registration and activate your account, please click the button below:</p>
+            
+            <center><a href="http://{{domain}}{% url 'activate' uidb64=uid token=token %}" class="button">Activate My Account</a></center>
+            
+            <p class="note">If the button above doesn't work, you can also copy and paste the following link into your browser:</p>
+            
+            <p class="link">http://{{domain}}{% url 'activate' uidb64=uid token=token %}</p>
+            
+            <p class="expiry">This activation link will expire in 24 hours for security reasons.</p>
+            
+            <div class="signature">
+                <p>Thanks,<br>
+                The Toy Kingdom Team</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © 2023 Toy Kingdom. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>
 {% endautoescape %}

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Activated - Toy Kingdom</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -14,12 +13,11 @@
         }
         
         body {
-            background-color: #f8f9fa;
+            background-color: #0074cc;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
             color: #333;
         }
         
@@ -27,10 +25,10 @@
             max-width: 500px;
             width: 90%;
             background-color: white;
-            border-radius: 15px;
+            border-radius: 8px;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
             animation: fadeIn 0.8s ease-out;
         }
         
@@ -39,65 +37,110 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
+        .logo {
+            margin-bottom: 24px;
+        }
+        
+        .logo-text {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .logo-text .blue {
+            color: #0074cc;
+        }
+        
+        .logo-text .yellow {
+            color: #ffcc00;
+        }
+        
         .success-icon {
-            font-size: 70px;
-            color: #28a745;
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .circle-icon {
+            width: 72px;
+            height: 72px;
+            background-color: #28a745;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .checkmark {
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
         }
         
         h1 {
-            font-size: 28px;
-            margin-bottom: 20px;
+            font-size: 26px;
+            margin-bottom: 24px;
             color: #333;
         }
         
         p {
             color: #666;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             line-height: 1.6;
         }
         
         .redirect-message {
+            margin-top: 40px;
             font-size: 14px;
             color: #6c757d;
-            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
+            width: 16px;
+            height: 16px;
+            margin-right: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            border-top-color: #2575fc;
+            border-top-color: #0074cc;
             animation: spin 1s linear infinite;
-            vertical-align: middle;
         }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
-        .logo {
-            font-size: 36px;
-            font-weight: bold;
-            color: #6a11cb;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">Toy Kingdom</div>
-        <i class="fas fa-check-circle success-icon"></i>
+        <div class="logo">
+            <div class="logo-text">
+                <span class="blue">Toy</span> <span class="yellow">Kingdom</span>
+            </div>
+        </div>
+        
+        <div class="success-icon">
+            <div class="circle-icon">
+                <span class="checkmark">✓</span>
+            </div>
+        </div>
+        
         <h1>Account Successfully Activated!</h1>
+        
         <p>Thank you for activating your Toy Kingdom account. You can now sign in and start shopping for your favorite toys and products.</p>
+        
         <p>Enjoy your shopping experience!</p>
+        
+        <div style="margin-top: 25px;">
+            <a href="http://localhost:3000/register" style="display: inline-block; padding: 10px 20px; background-color: #0074cc; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: 500;">Register Another User</a>
+            <a href="http://localhost:3000/login" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: 500;">Go to Login</a>
+        </div>
+        
         <div class="redirect-message">
             <div class="spinner"></div>
-            Redirecting you to the login page in a few seconds...
+            <span>Redirecting to the login page in a few seconds...</span>
         </div>
     </div>
 
@@ -105,7 +148,7 @@
         // Redirect after 3 seconds to give time to read the success message
         window.onload = function() {
             setTimeout(function() {
-                window.location.href = 'http://localhost:3000/#/login';
+                window.location.href = 'http://localhost:3000/login';
             }, 3000);
         };
     </script>
