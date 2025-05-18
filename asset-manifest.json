@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/CS121-Online-Store/static/css/main.090ddb88.css",
+    "main.js": "/CS121-Online-Store/static/js/main.466c2d60.js",
+    "static/js/453.2d40735f.chunk.js": "/CS121-Online-Store/static/js/453.2d40735f.chunk.js",
+    "static/media/VarelaRound-Regular.ttf": "/CS121-Online-Store/static/media/VarelaRound-Regular.e67ccd4a92677fdf8719.ttf",
+    "static/media/Toy_Logo.png": "/CS121-Online-Store/static/media/Toy_Logo.9435f3ca931130feaf51.png",
+    "index.html": "/CS121-Online-Store/index.html",
+    "main.090ddb88.css.map": "/CS121-Online-Store/static/css/main.090ddb88.css.map",
+    "main.466c2d60.js.map": "/CS121-Online-Store/static/js/main.466c2d60.js.map",
+    "453.2d40735f.chunk.js.map": "/CS121-Online-Store/static/js/453.2d40735f.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.090ddb88.css",
+    "static/js/main.466c2d60.js"
+  ]
+}
