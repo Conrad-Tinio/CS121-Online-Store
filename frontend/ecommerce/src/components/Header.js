@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Container, Form, Button, Modal, Badge, NavDropdown } from "react-bootstrap";
 import { useDispatch, useSelector } from 'react-redux'
 import { logout } from "../actions/userActions";
+import { listWishlist } from "../actions/wishlistActions";
 import axios from 'axios';
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -66,6 +67,12 @@ function Header() {
     }
     fetchCategories()
   }, [])
+
+  useEffect(() => {
+    if (userInfo) {
+      dispatch(listWishlist());
+    }
+  }, [dispatch, userInfo]);
 
   const logoutHandler = () => {
     dispatch(logout())
@@ -215,15 +222,56 @@ function Header() {
       </div>
 
       {/* Main Header */}
+      <style>
+        {`
+          @keyframes gradientAnimation {
+            0% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+            100% {
+              background-position: 0% 50%;
+            }
+          }
+
+          .brand-text {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+          }
+
+          .brand-text:hover {
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientAnimation 3s ease infinite;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            transform: scale(1.05);
+          }
+        `}
+      </style>
       <Navbar bg="primary" variant="dark" expand="lg" expanded={expanded}>
-        <Container>
-          <Navbar.Brand as={Link} to="/" className="me-4">
+        <Container className="py-2">
+          <Navbar.Brand as={Link} to="/" className="me-5 d-flex align-items-center">
             <img
               src={logo}
               height="40"
               className="d-inline-block align-top"
               alt="Logo"
             />
+            <span className="brand-text">
+              Toy Kingdom
+            </span>
           </Navbar.Brand>
 
           <Navbar.Toggle 
@@ -232,24 +280,57 @@ function Header() {
           />
 
           <Navbar.Collapse id="basic-navbar-nav">
-            <Form onSubmit={submitHandler} className="d-flex flex-grow-1 mx-lg-4">
-              <div className="position-relative flex-grow-1">
-                <Form.Control
-                  type="text"
-                  placeholder="Search products..."
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  className="search-input"
-                />
-              </div>
-              <Button type="submit" className="search-button ms-2">
-                <FontAwesomeIcon icon={faMagnifyingGlass} />
-              </Button>
-            </Form>
+            {!isAuthPage && (
+              <Form onSubmit={submitHandler} className="d-flex justify-content-center align-items-center flex-grow-1 mx-lg-5">
+                <div className="position-relative d-flex" style={{ width: '100%', maxWidth: '600px' }}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search products..."
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    className="search-input"
+                    style={{
+                      borderRadius: '30px',
+                      paddingRight: '50px',
+                      paddingLeft: '20px',
+                      border: 'none',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                      height: '45px',
+                      width: '100%'
+                    }}
+                  />
+                  <Button 
+                    type="submit" 
+                    style={{
+                      backgroundColor: '#FFD700',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '45px',
+                      height: '45px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'absolute',
+                      right: '0',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 2,
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                    }}
+                    className="d-flex align-items-center justify-content-center"
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FFC700'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFD700'}
+                  >
+                    <FontAwesomeIcon icon={faMagnifyingGlass} style={{ color: '#000' }} />
+                  </Button>
+                </div>
+              </Form>
+            )}
 
-            <div className="d-flex align-items-center">
+            <div className="d-flex align-items-center gap-4">
               {userInfo && !isAuthPage && (
-                <Link to="/wishlist" className="icon-button position-relative me-3">
+                <Link to="/wishlist" className="icon-button position-relative">
                   <FontAwesomeIcon icon={faHeart} size="lg" />
                   {wishlistItems?.length > 0 && (
                     <span className="badge-counter">{wishlistItems.length}</span>

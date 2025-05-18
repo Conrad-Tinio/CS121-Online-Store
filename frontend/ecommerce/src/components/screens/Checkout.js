@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Card, Image } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faShoppingCart, faHome } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import Message from '../Message';
 import DeliveryLocationMap from '../DeliveryLocationMap';
@@ -231,6 +233,7 @@ const Checkout = () => {
                                 size="lg"
                             onClick={continueShoppingHandler}
                         >
+                            <FontAwesomeIcon icon={faHome} className="me-2" />
                             Continue Shopping
                         </Button>
                             <Button 
@@ -248,22 +251,24 @@ const Checkout = () => {
     }
 
     return (
-        <Container className="py-5">
+        <Container className="py-4">
             <Row className="mb-4">
-                <Col className="d-flex justify-content-between">
+                <Col className="d-flex gap-2">
                     <Button 
-                        variant="outline-secondary" 
-                        className="d-flex align-items-center"
+                        variant="light"
                         onClick={backToCartHandler}
+                        className="d-flex align-items-center"
                     >
-                        <i className="fas fa-arrow-left me-2"></i> Back to Cart
+                        <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
+                        Back to Cart
                     </Button>
                     <Button 
-                        variant="outline-primary" 
-                        className="d-flex align-items-center"
+                        variant="outline-primary"
                         onClick={continueShoppingHandler}
+                        className="d-flex align-items-center"
                     >
-                        <i className="fas fa-shopping-bag me-2"></i> Continue Shopping
+                        <FontAwesomeIcon icon={faHome} className="me-2" />
+                        Continue Shopping
                     </Button>
                 </Col>
             </Row>

@@ -3,6 +3,8 @@ import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Container } from "react-bootstrap";
 import { Row, Col, Image, ListGroup, Button, Form } from "react-bootstrap";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faShoppingCart, faHeart } from '@fortawesome/free-solid-svg-icons';
 import Rating from "../Rating";
 import { listProductDetails } from "../../actions/productActions";
 import { addToWishlist, listWishlist } from "../../actions/wishlistActions";
@@ -119,9 +121,14 @@ function ProductScreen() {
 
   return (
     <Container className="py-4">
-      <Link to="/" className="btn btn-light mb-4">
-        <i className="fas fa-arrow-left me-2"></i>Back
-      </Link>
+      <Button 
+        variant="light" 
+        onClick={() => navigate('/')} 
+        className="mb-4"
+      >
+        <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: '8px' }} />
+        Back
+      </Button>
 
       {loading ? (
         <Loader />
@@ -196,18 +203,19 @@ function ProductScreen() {
                 onClick={addToCartHandler}
                 disabled={product.stockCount === 0}
               >
+                <FontAwesomeIcon icon={faShoppingCart} style={{ marginRight: '8px' }} />
                 {product.stockCount === 0 ? 'Out of Stock' : 'Add to Cart'}
               </Button>
 
-              {product.stockCount === 0 && (
+              {!isInWishlist && product.stockCount === 0 && (
                 <Button
-                  variant={isInWishlist ? "secondary" : "outline-primary"}
+                  variant="outline-primary"
                   size="lg"
                   className="py-3"
                   onClick={addToWishlistHandler}
-                  disabled={isInWishlist}
                 >
-                  {isInWishlist ? 'In Wishlist' : 'Add to Wishlist'}
+                  <FontAwesomeIcon icon={faHeart} style={{ marginRight: '8px' }} />
+                  Add to Wishlist
                 </Button>
               )}
             </div>

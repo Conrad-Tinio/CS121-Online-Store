@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import './fontawesome-config';  // Import Font Awesome configuration first
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './fontawesome';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomeScreen from './components/screens/HomeScreen';

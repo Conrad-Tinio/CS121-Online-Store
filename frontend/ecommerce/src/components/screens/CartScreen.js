@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { Row, Col, Image, ListGroup, Button, Card, Container, Modal } from "react-bootstrap";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { 
+    faArrowLeft, 
+    faTrash, 
+    faShoppingCart, 
+    faCreditCard 
+} from '@fortawesome/free-solid-svg-icons'
 import Loader from "../Loader";
 import Message from "../Message";
 import { addToCart, removeFromCart, clearCart } from '../../actions/cartActions';
@@ -82,10 +89,11 @@ function CartScreen() {
           <Col>
             <Button 
               variant="outline-secondary" 
-              className="continue-shopping-btn d-flex align-items-center"
+              className="continue-shopping-btn"
               onClick={continueShoppingHandler}
             >
-              <i className="fas fa-arrow-left me-2"></i> Continue Shopping
+              <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: '8px' }} />
+              Continue Shopping
             </Button>
           </Col>
         </Row>
@@ -102,7 +110,8 @@ function CartScreen() {
                     className="clear-cart-btn"
                     onClick={handleClearCart}
                   >
-                    <i className="fas fa-trash me-2"></i> Clear Cart
+                    <FontAwesomeIcon icon={faTrash} style={{ marginRight: '8px' }} />
+                    Clear Cart
                   </Button>
                 )}
               </div>
@@ -151,11 +160,12 @@ function CartScreen() {
                         </Col>
                         <Col md={2} className="text-end">
                           <Button
-                            variant="link"
+                            variant="danger"
+                            className="remove-cart-btn"
                             onClick={() => removeFromCartHandler(item.product)}
-                            className="remove-btn"
+                            aria-label="Remove from cart"
                           >
-                            <i className='fas fa-trash'></i>
+                            <FontAwesomeIcon icon={faTrash} />
                           </Button>
                         </Col>
                       </Row>
@@ -186,6 +196,7 @@ function CartScreen() {
                   disabled={cartItems.length === 0}
                   onClick={checkoutHandler}
                 >
+                  <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: '8px' }} />
                   Proceed to Checkout
                 </Button>
               </div>

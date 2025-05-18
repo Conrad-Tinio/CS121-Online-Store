@@ -14,6 +14,7 @@ function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [activationMessage, setActivationMessage] = useState("");
+  const [displayError, setDisplayError] = useState("");
 
   const dispatch = useDispatch();
   const userLogin = useSelector(state => state.userLogin);
@@ -30,6 +31,18 @@ function LoginScreen() {
       // Don't remove the message yet to keep it visible if user refreshes
     }
   }, []);
+
+  // Handle error message display and auto-dismiss
+  useEffect(() => {
+    if (error) {
+      setDisplayError(error);
+      const timer = setTimeout(() => {
+        setDisplayError("");
+      }, 3000); // Dismiss after 3 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
   
   useEffect(() => {
     if (userInfo) {
@@ -71,7 +84,7 @@ function LoginScreen() {
           </div>
 
           {activationMessage && <Message variant='success'>{activationMessage}</Message>}
-          {error && <Message variant='danger'>{error}</Message>}
+          {displayError && <Message variant='danger'>{displayError}</Message>}
           {loading && <Loader />}
           
           <Form onSubmit={submitHandler}>

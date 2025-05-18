@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Row, Col, Button, Modal, Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTrash, faArrowLeft, faHeart } from '@fortawesome/free-solid-svg-icons'
 import Message from './Message'
 import Loader from './Loader'
 import { listWishlist, removeFromWishlist } from '../actions/wishlistActions'
@@ -84,7 +86,7 @@ function WishlistScreen() {
                 <Row className="mb-4">
                     <Col>
                         <Link to="/" className="btn continue-shopping-btn">
-                            <i className="fas fa-arrow-left me-2"></i>Continue Shopping
+                            <FontAwesomeIcon icon={faArrowLeft} className="me-2" />Continue Shopping
                         </Link>
                     </Col>
                 </Row>
@@ -106,7 +108,7 @@ function WishlistScreen() {
 
                             {wishlistItems.length === 0 ? (
                                 <div className="empty-wishlist">
-                                    <i className="far fa-heart mb-3"></i>
+                                    <FontAwesomeIcon icon={faHeart} className="mb-3" />
                                     <p>Your wishlist is empty</p>
                                     <Link to="/" className="btn continue-shopping-btn">
                                         Start Shopping
@@ -158,8 +160,9 @@ function WishlistScreen() {
                                                     <Button
                                                         className="remove-wishlist-btn"
                                                         onClick={() => handleShowDeleteModal(item)}
+                                                        aria-label="Remove from wishlist"
                                                     >
-                                                        <i className='fas fa-trash'></i>
+                                                        <FontAwesomeIcon icon={faTrash} />
                                                     </Button>
                                                 </Col>
                                             </Row>

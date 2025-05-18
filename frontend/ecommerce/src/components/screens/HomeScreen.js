@@ -279,14 +279,32 @@ function HomeScreen() {
                     ) : products.length === 0 ? (
                         <Message variant='info'>No products found in this category</Message>
                     ) : (
+                        <div className="products-grid">
+                            <style>
+                                {`
+                                    .products-grid .row {
+                                        margin: 0 -15px;
+                                        row-gap: 60px !important;
+                                    }
+                                    .products-grid .col {
+                                        padding: 0 15px;
+                                    }
+                                    @media (max-width: 768px) {
+                                        .products-grid .row {
+                                            row-gap: 40px !important;
+                                        }
+                                    }
+                                `}
+                            </style>
                             <Row>
                                 {products.map(product => (
-                                <Col key={product._id} sm={12} md={6} lg={4} xl={4}>
+                                    <Col key={product._id} sm={12} md={6} lg={4} xl={4}>
                                         <Product product={product} />
                                     </Col>
                                 ))}
                             </Row>
-                        )}
+                        </div>
+                    )}
                 </Col>
             </Row>
 

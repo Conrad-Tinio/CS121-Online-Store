@@ -2,6 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Row, Col, Card, Image, Button, Badge, Container } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { 
+    faArrowLeft, 
+    faBox, 
+    faCalendar, 
+    faShippingFast, 
+    faCheckCircle, 
+    faTimesCircle, 
+    faTruck, 
+    faClock 
+} from '@fortawesome/free-solid-svg-icons'
 import Message from '../Message'
 import Loader from '../Loader'
 import axios from 'axios'
@@ -87,7 +98,7 @@ function OrderDetailsScreen() {
                 onClick={() => navigate('/account', { state: { activeTab: 'orders' } })}
                 className="mb-4"
             >
-                <i className="fas fa-arrow-left me-2"></i>
+                <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
                 Back to Orders
             </Button>
 
@@ -102,14 +113,14 @@ function OrderDetailsScreen() {
                                         bg={getStatusColor(order.status)}
                                         className="status-badge me-2"
                                     >
-                                        <i className="fas fa-box me-1"></i>
+                                        <FontAwesomeIcon icon={faBox} className="me-1" />
                                         {order.status}
                                     </Badge>
                                     <Badge 
                                         bg="info" 
                                         className="date-badge"
                                     >
-                                        <i className="fas fa-calendar me-1"></i>
+                                        <FontAwesomeIcon icon={faCalendar} className="me-1" />
                                         {formatDate(order.created_at)}
                                     </Badge>
                                 </div>
@@ -148,7 +159,7 @@ function OrderDetailsScreen() {
                         <Card className="mb-4 order-details-card">
                             <Card.Header className="bg-white border-bottom-0 pt-4 px-4">
                                 <h5 className="mb-0">
-                                    <i className="fas fa-shipping-fast me-2"></i>
+                                    <FontAwesomeIcon icon={faShippingFast} className="me-2" />
                                     Delivery Information
                                 </h5>
                             </Card.Header>
@@ -176,7 +187,7 @@ function OrderDetailsScreen() {
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Payment Status</span>
                                     <Badge bg={order.is_paid ? 'success' : 'danger'}>
-                                        <i className={`fas fa-${order.is_paid ? 'check-circle' : 'times-circle'} me-1`}></i>
+                                        <FontAwesomeIcon icon={order.is_paid ? faCheckCircle : faTimesCircle} className="me-1" />
                                         {order.is_paid ? 'Paid' : 'Not Paid'}
                                     </Badge>
                                 </div>
@@ -191,7 +202,7 @@ function OrderDetailsScreen() {
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Delivery Status</span>
                                     <Badge bg={order.is_delivered ? 'success' : 'warning'}>
-                                        <i className={`fas fa-${order.is_delivered ? 'truck' : 'clock'} me-1`}></i>
+                                        <FontAwesomeIcon icon={order.is_delivered ? faTruck : faClock} className="me-1" />
                                         {order.is_delivered ? 'Delivered' : 'Pending'}
                                     </Badge>
                                 </div>
