@@ -49,28 +49,23 @@ function HomeScreen() {
                     max: urlMaxPrice !== null ? parseInt(urlMaxPrice) : highestPrice
                 })
                 setInitialLoad(false)
-            } else if (!urlMinPrice && !urlMaxPrice) {
-                // If no price filters in URL, reset to full range
-                setPriceRange({
-                    min: 0,
-                    max: highestPrice
-                })
             }
         }
     }, [products, initialLoad])
 
-    // Update price range when URL changes
+    // Update price range when URL changes - only if price filters specifically changed
     useEffect(() => {
         const urlMinPrice = searchParams.get('price_min')
         const urlMaxPrice = searchParams.get('price_max')
         
+        // Only update price range if both price parameters are present in URL
         if (urlMinPrice !== null && urlMaxPrice !== null) {
             setPriceRange({
                 min: parseInt(urlMinPrice),
                 max: parseInt(urlMaxPrice)
             })
         }
-    }, [location.search])
+    }, [])  // Empty dependency array - only run on mount
 
     // Fetch tag types
     useEffect(() => {
@@ -129,6 +124,10 @@ function HomeScreen() {
             
             const params = new URLSearchParams(location.search)
             
+            // Preserve existing price filter parameters
+            const currentMinPrice = params.get('price_min')
+            const currentMaxPrice = params.get('price_max')
+            
             Object.entries(updatedTags).forEach(([type, tags]) => {
                 if (tags.length > 0) {
                     params.set(type.toLowerCase(), tags.join(','))
@@ -136,6 +135,12 @@ function HomeScreen() {
                     params.delete(type.toLowerCase())
                 }
             })
+            
+            // Keep the current price filter values if they exist
+            if (currentMinPrice !== null && currentMaxPrice !== null) {
+                params.set('price_min', currentMinPrice)
+                params.set('price_max', currentMaxPrice)
+            }
             
             if (currentCategory) {
                 params.set('category', currentCategory)
@@ -202,74 +207,72 @@ function HomeScreen() {
         <Container>
             <Row className="py-4">
                 {/* Filter Section */}
-                {currentCategory && (
-                    <Col md={3}>
-                        <div className="filter-section">
-                            <div className="filter-header">
-                                <h4>Filter</h4>
-                                <button className="clear-btn" onClick={clearFilters}>Clear</button>
-                            </div>
-
-                            {/* Price Range */}
-                            <div className="price-range mb-4">
-                                <h5>Price Range</h5>
-                                <div className="price-inputs">
-                                    <input
-                                        type="number"
-                                        name="min"
-                                        value={priceRange.min}
-                                        onChange={handlePriceChange}
-                                        className="price-input"
-                                        min="0"
-                                        max={priceRange.max}
-                                    />
-                                    <span className="price-separator">-</span>
-                                    <input
-                                        type="number"
-                                        name="max"
-                                        value={priceRange.max}
-                                        onChange={handlePriceChange}
-                                        className="price-input"
-                                        min={priceRange.min}
-                                        max={maxPrice}
-                                    />
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max={maxPrice}
-                                    value={priceRange.max}
-                                    onChange={handleSliderChange}
-                                    className="price-slider"
-                                />
-                                <button className="apply-price-btn" onClick={applyPriceFilter}>
-                                    Apply Price
-                                </button>
-                            </div>
-
-                            {/* Tag Filters */}
-                            {tagTypes.map(tagType => (
-                                <div key={tagType.id} className="filter-group mb-4">
-                                    <h5>{tagType.name}</h5>
-                                    <div className="tag-buttons">
-                                        {tagType.tags.map(tag => (
-                                            <button
-                                                key={tag.id}
-                                                className={`tag-button ${selectedTags[tagType.name]?.includes(tag.name) ? 'active' : ''}`}
-                                                onClick={() => handleTagSelect(tagType.name, tag.name)}
-                                            >
-                                                {tag.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
+                <Col md={3}>
+                    <div className="filter-section">
+                        <div className="filter-header">
+                            <h4>Filter</h4>
+                            <button className="clear-btn" onClick={clearFilters}>Clear</button>
                         </div>
-                    </Col>
-                )}
+
+                        {/* Price Range */}
+                        <div className="price-range mb-4">
+                            <h5>Price Range</h5>
+                            <div className="price-inputs">
+                                <input
+                                    type="number"
+                                    name="min"
+                                    value={priceRange.min}
+                                    onChange={handlePriceChange}
+                                    className="price-input"
+                                    min="0"
+                                    max={priceRange.max}
+                                />
+                                <span className="price-separator">-</span>
+                                <input
+                                    type="number"
+                                    name="max"
+                                    value={priceRange.max}
+                                    onChange={handlePriceChange}
+                                    className="price-input"
+                                    min={priceRange.min}
+                                    max={maxPrice}
+                                />
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max={maxPrice}
+                                value={priceRange.max}
+                                onChange={handleSliderChange}
+                                className="price-slider"
+                            />
+                            <button className="apply-price-btn" onClick={applyPriceFilter}>
+                                Apply Price
+                            </button>
+                        </div>
+
+                        {/* Tag Filters */}
+                        {tagTypes.map(tagType => (
+                            <div key={tagType.id} className="filter-group mb-4">
+                                <h5>{tagType.name}</h5>
+                                <div className="tag-buttons">
+                                    {tagType.tags.map(tag => (
+                                        <button
+                                            key={tag.id}
+                                            className={`tag-button ${selectedTags[tagType.name]?.includes(tag.name) ? 'active' : ''}`}
+                                            onClick={() => handleTagSelect(tagType.name, tag.name)}
+                                        >
+                                            {tag.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Col>
 
                 {/* Products Section */}
-                <Col md={currentCategory ? 9 : 12}>
+                <Col md={9}>
                     {productsLoading ? (
                         <Loader />
                     ) : error ? (
