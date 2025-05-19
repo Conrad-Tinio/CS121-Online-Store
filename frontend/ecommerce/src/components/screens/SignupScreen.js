@@ -42,6 +42,7 @@ function SignupScreen() {
 
   useEffect(() => {
     if (userInfo && userInfo.details === "Please check your email to activate your account.") {
+      localStorage.setItem('activateMessage', userInfo.details);
       navigate("/login");
     }
     else if (error) {

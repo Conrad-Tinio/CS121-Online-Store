@@ -28,7 +28,8 @@ function LoginScreen() {
     const message = localStorage.getItem('activateMessage');
     if (message) {
       setActivationMessage(message);
-      // Don't remove the message yet to keep it visible if user refreshes
+      // Remove the message from localStorage after displaying it
+      localStorage.removeItem('activateMessage');
     }
   }, []);
 
@@ -46,8 +47,6 @@ function LoginScreen() {
   
   useEffect(() => {
     if (userInfo) {
-      // Clear activation message when user logs in
-      localStorage.removeItem('activateMessage');
       navigate(redirect);
     }
   }, [userInfo, redirect, navigate]);
@@ -83,7 +82,7 @@ function LoginScreen() {
             </p>
           </div>
 
-          {activationMessage && <Message variant='success'>{activationMessage}</Message>}
+          {activationMessage && <Message variant='success' autoFade={true}>{activationMessage}</Message>}
           {displayError && <Message variant='danger'>{displayError}</Message>}
           {loading && <Loader />}
           
